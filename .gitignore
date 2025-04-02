@@ -1,0 +1,40 @@
+# == General ==
+.DS_Store   # macOS system file
+*.log       # Log files
+.env        # Environment variables file
+
+# == Python (backend) ==
+__pycache__/   # Python cache files
+*.pyc          # Python compiled files
+*.pyo          # Python optimized files
+*.pyd
+pip-log.txt
+
+# == Node.js (frontend) ==
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# == React (frontend) ==
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.cache/
+.next/
+out/
+*.log
+
+
+# == VS Code ==
+.vscode/  # Visual Studio Code settings
+.Python
+
+env/
+ENV/
+venv/
+.venv
+

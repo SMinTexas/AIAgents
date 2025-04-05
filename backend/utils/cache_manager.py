@@ -1,82 +1,92 @@
-from functools import lru_cache
 import time
-from typing import Any, Dict, Optional, Tuple
+import logging
+from typing import Dict, Any, Optional
+
+logger = logging.getLogger(__name__)
 
 class CacheManager:
-    def __init__(self):
-        """ Initialize cache dictionaries for different types of data """
-        self.geocode_cache: Dict[str, Tuple[Any, float]] = {}
-        self.weather_cache: Dict[str, Tuple[Any, float]] = {}
-        self.places_cache: Dict[str, Tuple[Any, float]] = {}
-        self.route_cache: Dict[str, Tuple[Any, float]] = {}
-        self.cache_ttl = 3600  # 1 hour in seconds
-
-    def get_cached(self, cache_type: str, key: str) -> Optional[Any]:
-        """
-        Retrieve cached data if it exists and has not expired
+    def __init__(self, ttl: int = 3600):
+        """ 
+        Initialize the cache manager with a default TTL of 1 hour
 
         Args:
-            cache_type:  Type of cache ('geocode', 'weather', 'places', 'route')
-            key: Cache key
+            ttl (int): Time to live in seconds for cached items 
+        """
+        self.cache: Dict[str, Dict[str, Any]] = {}
+        self.ttl = ttl
+        logger.info("CacheManager initialized with TTL: $d seconds", ttl)
+
+
+    def get_cached(self, category: str, key: str) -> Optional[Any]:
+        """
+        Get a cached value if it exists and has not expired
+
+        Args:
+            category (str):  The category of the cached item (e.g., 'geocode', 'route')
+            key (str): The unique key for the cached item
 
         Returns:
-            Cached data if valid, None otherwise
+            Optional[Any]: The cached value if it exists and has not expired, otherwise None
         """
 
-        if cache_type in self.__dict__:
-            cache = self.__dict__[cache_type]
-            if key in cache:
-                data, timestamp = cache[key]
-                if time.time() - timestamp < self.cache_ttl:
-                    return data
-        return None
+        if category not in self.cache:
+            return None
+
+        if key not in self.cache[category]:
+            return None
+        
+        cache_entry = self.cache[category][key]
+        if time.time() - cache_entry['timestamp'] > self.ttl:
+            logger.debug("Cache entry expired for %s/%s", category, key)
+            del self.cache[category][key]
+            return None
+        
+        logger.debug("Cache hit for %s/%s", category, key)
+        return cache_entry['value']
     
     def set_cached(self, cache_type: str, key: str, value: Any) -> None:
         """
-        Store data in cache with current timestamp
+        Set a value in the cache with the current timestamp
 
         Args:
-            cache_type: Type of cache ('geocode', 'weather', 'places', 'route')
-            key: Cache key
-            value:  Data to cache
+            category (str): The category of the cached item
+            key (str): The unique key for the cached item
+            value (Any): The value to cache
         """
 
-        if cache_type in self.__dict__:
-            self.__dict__[cache_type][key] = (value, time.time())
+        if category not in self.cache:
+            self.cache[category] = {}
 
-    def clear_cache(self, cache_type: Optional[str] = None) -> None:
+        self.cache[category][key] = {
+            'value': value,
+            'timestamp': time.time()
+        }
+        logger.debug("Cached value for %s/%s", category, key)
+
+    def clear_cache(self, category: Optional[str] = None) -> None:
         """
-        Clear cache for specified type or all caches is no type specified
+        Clear the cache for a specific category or all categories
 
         Args:
-            cache_type: Optional type of cache to clear
+            category (Optional[str]): The category to clear.  If None, clear all categories.
         """
 
-        if cache_type:
-            if cache_type in self.__dict__:
-                self.__dict__[cache_type].clear()
-        else:
-            for cache in self.__dict__.values():
-                if isinstance(cache, dict):
-                    cache.clear()
+        if category is None:
+            self.cache.clear()
+            logger.info("Cleared all cache categories")
+        elif category in self.cache:
+            del self.cache[category]
+            logger.info("Cleared cached category: %s", category)
 
-    def get_cache_size(self, cache_type: Optional[str] = None) -> Dict[str, int]:
+    def get_cache_size(self) -> Dict[str, int]:
         """
-        Get the size of specified cache or all caches
-
-        Args:
-            cache_type: Optional type of cache to check
+        Get the current size of each cache category
 
         Returns:
-            Dictionary with cache sizes
+            Dict[str, int]: Dictionary mapping categories to their cache sizes
         """
 
-        sizes = {}
-        if cache_type:
-            if cache_type in self.__dict__:
-                sizes[cache_type] = len(self.__dict__[cache_type])
-        else:
-            for name, cache in self.__dict__.items():
-                if isinstance(cache, dict):
-                    sizes[name] = len(cache)
-        return sizes
+        return {category: len(entries) for category, entries in self.cache.items()}
+    
+    # Create a singleton instance of CacheManager
+    cache_manager = CacheManager()

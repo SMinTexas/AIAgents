@@ -6,11 +6,17 @@ import re
 import asyncio
 from difflib import SequenceMatcher
 import difflib
+import sys
+from pathlib import Path
+# Add the backend directory to the Python path
+backend_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(backend_dir))
 from utils.cache_manager import cache_manager
 import logging
 
+
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def is_similar(a, b, threshold=0.8):
@@ -45,15 +51,16 @@ class RecommendationAgent:
         """ 
         Fetch recommendations for restaurants, hotels, and attractions 
         """
+        total_start_time = time.time()
         logger.info(f"Starting recommendations for locations: {location}")
         recommendations = {}
-        start_time = time.time()
 
         for loc in location:
-            logger.info(f"\nProcessing location: {loc}")
             loc_start_time = time.time()
+            logger.info(f"\nProcessing location: {loc}")
 
             # Try to get cached geocoding result
+            geocode_start = time.time()
             lat_lng = cache_manager.get_cached('geocode', loc)
             if lat_lng:
                 logger.info(f"Cache HIT: Geocoding for {loc}")
@@ -63,12 +70,15 @@ class RecommendationAgent:
                 if lat_lng:
                     cache_manager.set_cached('geocode', loc, lat_lng)
                     logger.info(f"Cached geocoding result for {loc}")
+            geocode_time = time.time() - geocode_start
+            logger.info(f"Geocoding took {geocode_time:.2f} seconds")
 
             if not lat_lng:
                 logger.warning(f"Failed to get coordinates for {loc}, skipping")
                 continue
 
             # Try to get cached places results for restaurants
+            places_start = time.time()
             cache_key = f"{lat_lng}_restaurant"
             restaurants = cache_manager.get_cached('places', cache_key)
             if restaurants:
@@ -93,51 +103,64 @@ class RecommendationAgent:
                     logger.info(f"Cached {len(hotels)} hotels for {loc}")
 
             # Get attractions across multiple categories
-            all_attractions = []
-            for attr_type in self.attraction_types:
-                cache_key = f"{lat_lng}_{attr_type}"
-                attractions = cache_manager.get_cached('places', cache_key)
-                if attractions:
+            attractions_start = time.time()
+            attractions = []
+            for attraction_type in self.attraction_types:
+                cache_key = f"{lat_lng}_{attraction_type}"
+                cached_attractions = cache_manager.get_cached('places', cache_key)
+                if cached_attractions:
                     logger.info(f"Cache HIT: {attr_type} for {loc}")
+                    attractions.extend(cached_attractions)
                 else:
-                    logger.info(f"Cache MISS: {attr_type} for {loc}")
-                    attractions = await self._fetch_places(lat_lng, attr_type)
-                    if attractions:
-                        cache_manager.set_cached('places', cache_key, attractions)
-                        logger.info(f"Cached {len(attractions)} {attr_type} for {loc}")
-                if attractions:
-                    all_attractions.extend(attractions)
+                    logger.info(f"Cache MISS: {attraction_type} for {loc}")
+                    type_attractions = await self._fetch_places(lat_lng, attraction_type)
+                    if type_attractions:
+                        cache_manager.set_cached('places', cache_key, type_attractions)
+                        logger.info(f"Cached {len(type_attractions)} {attraction_type} for {loc}")
+                        attractions.extend(type_attractions)
 
-            # Process attractions to get unique ones and limit to 5
-            unique_attractions = {p["place_id"]: p for p in all_attractions}.values()
-            attractions = list(unique_attractions)[:5]
+            attractions_time = time.time() - attractions_start
+            logger.info(f"Attractions fetching took {attractions_time:.2f} seconds")
 
-            # Use OpenAI to refine recommendations
-            best_restaurants = self._rank_with_ai(restaurants, "restaurants")
-            best_hotels = self._rank_with_ai(hotels, "hotels")
+            # Get details for all places
+            details_start = time.time()
+            all_places = []
+            if restaurants:
+                all_places.extend(restaurants)
+            if hotels:
+                all_places.extend(hotels)
+            if attractions:
+                all_places.extend(attractions)
 
-            # Fetch detailed information for each place
-            restaurant_details = await self._get_place_details_async(best_restaurants)
-            hotel_details = await self._get_place_details_async(best_hotels)
-            attraction_details = await self._get_place_details_async(attractions)
+            place_details = []
+            for place in all_places:
+                cache_key = f"details_{place['place_id']}"
+                details = cache_manager.get_cached('details', cache_key)
+                if details:
+                    logger.info(f"Cache HIT:  Details for place {place['place_id']}")
+                    place_details.append(details)
+                else:
+                    logger.info(f"Cache MISS: Details for place {place['place_id']}")
+                    details = await self._get_place_details_async(place['place_id'])
+                    if details:
+                        cache_manager.set_cached('details', cache_key, details)
+                        logger.info(f"Cached details for place {place['place_id']}")
+                        place_details.append(details)
+            
+            details_time = time.time() - details_start
+            logger.info(f"Place details fetching took {details_time:.2f} seconds")
 
-            # Create the recommendations dictionary for this location
             recommendations[loc] = {
                 "restaurants": restaurant_details,
                 "hotels": hotel_details,
                 "attractions": attraction_details
             }
 
-            loc_end_time = time.time()
-            logger.info(f"Completed processing {loc} in {loc_end_time - loc_start_time:.2f} seconds")
-            logger.info(f"Results for {loc}:")
-            logger.info(f" - Restaurants: {len(restaurant_details)}")
-            logger.info(f" - Hotels: {len(hotel_details)}")
-            logger.info(f" - Attractions: {len(attraction_details)}")
+            loc_time = time.time() - loc_start_time
+            logger.info(f"Total time for location {loc}: {loc_time:.2f} seconds")
 
-        end_time = time.time()
-        logger.info(f"\nTotal processing time: {end_time - start_time:.2f} seconds")
-        logger.info(f"Cache sizes: {cache_manager.get_cache_size()}")
+        total_time = time.time() - total_start_time
+        logger.info(f"\nTotal time for all locations: {total_time:.2f} seconds")
 
         return recommendations
     

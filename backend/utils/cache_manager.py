@@ -28,11 +28,15 @@ class CacheManager:
         Returns:
             Optional[Any]: The cached value if it exists and has not expired, otherwise None
         """
+        logger.debug(f"Getting cached value for category: {category}, key: {key}")
+        logger.debug(f"Current cache state: {self.cache}")
 
         if category not in self.cache:
+            logger.debug(f"Category {category} not found in cache")
             return None
 
         if key not in self.cache[category]:
+            logger.debug(f"Key {key} not found in category {category}")
             return None
         
         cache_entry = self.cache[category][key]
@@ -44,7 +48,7 @@ class CacheManager:
         logger.debug("Cache hit for %s/%s", category, key)
         return cache_entry['value']
     
-    def set_cached(self, cache_type: str, key: str, value: Any) -> None:
+    def set_cached(self, category: str, key: str, value: Any) -> None:
         """
         Set a value in the cache with the current timestamp
 
@@ -88,5 +92,5 @@ class CacheManager:
 
         return {category: len(entries) for category, entries in self.cache.items()}
     
-    # Create a singleton instance of CacheManager
-    cache_manager = CacheManager()
+# Create a singleton instance of CacheManager
+cache_manager = CacheManager()

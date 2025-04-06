@@ -1,18 +1,15 @@
-from dotenv import load_dotenv
 import os
 import googlemaps
 import folium
 import polyline
 import datetime
 
-# Load environment variables
-load_dotenv()
 
 class TravelAgent:
     def __init__(self):
         self.api_key = os.getenv("GOOGLE_MAPS_API_KEY")
         if not self.api_key:
-            raise ValueError("Google Maps API key for Google Maps not found!  Check your .env file.")
+            raise ValueError("Google Maps API key not found.  This should have been caught during startup.")
         
         self.gmaps = googlemaps.Client(key=self.api_key)
         self.locations = {}

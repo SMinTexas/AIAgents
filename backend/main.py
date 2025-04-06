@@ -1,8 +1,18 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()
+required_env_vars = [
+    "GOOGLE_MAPS_API_KEY",
+    "OPENAI_API_KEY",
+    "AZURE_OPENAI_ENDPOINT",
+    "WEATHER_API_KEY"
+]
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from orchestrator import router as orchestrator_router
-from dotenv import load_dotenv
-load_dotenv()
 
 app = FastAPI()
 

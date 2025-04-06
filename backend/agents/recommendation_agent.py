@@ -109,7 +109,7 @@ class RecommendationAgent:
                 cache_key = f"{lat_lng}_{attraction_type}"
                 cached_attractions = cache_manager.get_cached('places', cache_key)
                 if cached_attractions:
-                    logger.info(f"Cache HIT: {attr_type} for {loc}")
+                    logger.info(f"Cache HIT: {attraction_type} for {loc}")
                     attractions.extend(cached_attractions)
                 else:
                     logger.info(f"Cache MISS: {attraction_type} for {loc}")
@@ -141,7 +141,7 @@ class RecommendationAgent:
                     place_details.append(details)
                 else:
                     logger.info(f"Cache MISS: Details for place {place['place_id']}")
-                    details = await self._get_place_details_async(place['place_id'])
+                    details = await self._get_place_details(place['place_id'])
                     if details:
                         cache_manager.set_cached('details', cache_key, details)
                         logger.info(f"Cached details for place {place['place_id']}")
@@ -151,9 +151,9 @@ class RecommendationAgent:
             logger.info(f"Place details fetching took {details_time:.2f} seconds")
 
             recommendations[loc] = {
-                "restaurants": restaurant_details,
-                "hotels": hotel_details,
-                "attractions": attraction_details
+                "restaurants": restaurants,
+                "hotels": hotels,
+                "attractions": attractions
             }
 
             loc_time = time.time() - loc_start_time
@@ -206,55 +206,48 @@ class RecommendationAgent:
             logger.error(f"Error fetching places for {location}: {str(e)}")
             return []
             
-    async def _get_place_details_async(self, places):
+    async def _get_place_details(self, place_id):
         """
-        Get detailed information for places with caching
+        Get detailed information for for a single place with caching
         """
-        results = []
-        for place in places:
-                if not place.get("place_id"):
-                    continue
+        try:
                 
-                # Try to get cached place details
-                cache_key = f"place_details_{place['place_id']}"
-                cached_details = cache_manager.get_cached('places', cache_key)
-                if cached_details:
-                    logger.info(f"Cache HIT: Place details for {place.get('name', 'Unknown')}")
-                    results.append(cached_details)
-                    continue
+            # Try to get cached place details
+            cache_key = f"details_{'place_id'}"
+            cached_details = cache_manager.get_cached('details', cache_key)
+            if cached_details:
+                logger.info(f"Cache HIT:  Place details for {place.get('name', 'Unknown')}")
+                return cached_details
 
-                logger.info(f"Cache MISS:  Place details for {place.get('name', 'Unknown')}")
-                try:
-                    response = await self.http_client.get(
-                        self.details_url,
-                        params={
-                            "place_id": place["place_id"],
-                            "fields": "name,formatted_address,formatted_phone_number,rating,opening_hours",
-                            "key": self.google_api_key
-                        }
-                    )
-                    result = response.json()
-                    if "result" in result:
-                        details = result["result"]
-                        place_details = {
-                            "name": details.get("name", "N/A"),
-                            "address": details.get("formatted_address", "N/A"),
-                            "phone_number": details.get("formatted_phone_number", "N/A"),
-                            "rating": details.get("rating", "N/A"),
-                            "opening_hours": details.get("opening_hours", {}).get("weekday_text", "N/A"),
-                            "coords": place.get("coords"),
-                            "place_id": place["place_id"]
-                        }
+            logger.info(f"Cache MISS:  Place details for {place_id}")
+            response = await self.http_client.get(
+                self.details_url,
+                params={
+                    "place_id": place_id,
+                    "fields": "name,formatted_address,formatted_phone_number,rating,opening_hours",
+                    "key": self.google_api_key
+                }
+            )
+            result = response.json()
+            if "result" in result:
+                details = result["result"]
+                place_details = {
+                    "name": details.get("name", "N/A"),
+                    "address": details.get("formatted_address", "N/A"),
+                    "phone_number": details.get("formatted_phone_number", "N/A"),
+                    "rating": details.get("rating", "N/A"),
+                    "opening_hours": details.get("opening_hours", {}).get("weekday_text", "N/A"),
+                    "place_id": place_id
+                }
 
-                        #Cache the place details
-                        cache_manager.set_cached('places', cache_key, place_details)
-                        logger.info(f"Cached place details for {place_details['name']}")
-                        results.append(place_details)
-                except Exception as e:
-                    logger.error(f"Error getting place details for {place.get('name', 'Unknown')}: {str(e)}")
-                    continue
+                # Cache the place details
+                cache_manager.set_cached('details', cache_key, place_details)
+                logger.info(f"Cached place details for {place_details['name']}")
+                return place_details
+        except Exception as e:
+            logger.error(f"Error getting place details for {place_id}: {str(e)}")
 
-        return results
+        return None
     
     def _rank_with_ai(self, places, category):
         """ 

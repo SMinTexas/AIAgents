@@ -5,12 +5,12 @@ import L from "leaflet";
 
 // Custom marker icons
 const originIcon = new L.Icon({
-    iconUrl: "https://maps.google.com/mapfiles/ms/icons/star.png",
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-pushpin.png",
     iconSize: [30, 30]
 })
 
 const destinationIcon = new L.Icon({
-    iconUrl: "https://maps.google.com/mapfiles/ms/icons/flag.png",
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-pushpin.png",
     iconSize: [30, 30]
 })
 
@@ -49,7 +49,7 @@ const MapView = ({ tripData }) => {
 
     useEffect(() => {
         const renderStart = performance.now();
-        // console.log("Rendering map and markers started ...");
+
         if (!tripData || !tripData.route) {
             console.warn("No route data received in frontend");
             return;
@@ -61,12 +61,11 @@ const MapView = ({ tripData }) => {
         }
 
         const routeCoordinates = tripData.route.coordinates.map(coord => [coord[0], coord[1]]);
-
         setRoute(routeCoordinates);
 
         // Set map center to origin
-        const originCoords = tripData.route?.[0]?.coordinates?.[0] || [29.7858, -95.8244];
-        const destinationCoords = tripData.route?.coordinates?.[tripData.route.coordinates.length -1] || null;
+        const originCoords = routeCoordinates[0] || [29.7858, -95.8244];
+        const destinationCoords = routeCoordinates[routeCoordinates.length - 1] || null;
         setCenter(originCoords);
 
         // Add markers for waypoints, weather, traffic, and recommendations
@@ -77,7 +76,9 @@ const MapView = ({ tripData }) => {
                 position: originCoords,
                 type: "origin",
                 info: "Starting Point"
-            })
+            });
+        } else {
+            console.warn("No origin coordinates found in route data");
         }
 
         if (destinationCoords) {
@@ -85,8 +86,11 @@ const MapView = ({ tripData }) => {
                 position: destinationCoords,
                 type: "destination",
                 info: "Destination Point"
-            })
+            });
+        } else {
+            console.warn("No destination coordinates found in route data");
         }
+
         // Weather markers
         if (tripData.weather) {
             Object.entries(tripData.weather).forEach(([location, data]) => {
@@ -152,7 +156,6 @@ const MapView = ({ tripData }) => {
 
         setMarkers(newMarkers);
         const renderEnd = performance.now();
-        // console.log(`Map and markers rendered in ${(renderEnd - renderStart).toFixed(2)} ms`);
     }, [tripData]);
 
     return (

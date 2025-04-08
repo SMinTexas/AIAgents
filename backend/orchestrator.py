@@ -82,9 +82,6 @@ async def plan_trip(request: RouteRequest):
             request.waypoints
         )
 
-        # if not isinstance(recommendations, list):
-        #     recommendations = [recommendations] if recommendations else []
-
         response_data = {
             "route": route_info,
             "traffic": traffic_info,
@@ -92,9 +89,6 @@ async def plan_trip(request: RouteRequest):
             "recommendations": recommendations
         }
 
-        # print(f"\n Final Traffic Object (before return)")
-        # print(json.dumps(traffic_info, indent=2))
-        # print(f"Backend trip planning completed in {time.time() - start_time:.2f} seconds")
         return response_data
     
     except Exception as e:

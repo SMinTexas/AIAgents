@@ -4,19 +4,25 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Custom marker icons
+const originIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/star.png",
+    iconSize: [30, 30]
+})
+
+const destinationIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/flag.png",
+    iconSize: [30, 30]
+})
+
 const weatherIcon = new L.Icon({
-    // iconUrl: "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
     iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-    //,"https://cdn-icons.png.flaticon.com/512/869/869869.png"
     iconSize: [30, 30]
 });
 const trafficIcon = new L.Icon({
-    // iconUrl: "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
     iconSize: [30, 30]
 })
 const recommendationIcon = new L.Icon({
-    // iconUrl: "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
     iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
     iconSize: [30, 30]
 })
@@ -60,11 +66,27 @@ const MapView = ({ tripData }) => {
 
         // Set map center to origin
         const originCoords = tripData.route?.[0]?.coordinates?.[0] || [29.7858, -95.8244];
+        const destinationCoords = tripData.route?.coordinates?.[tripData.route.coordinates.length -1] || null;
         setCenter(originCoords);
 
         // Add markers for waypoints, weather, traffic, and recommendations
         const newMarkers = [];
 
+        if (originCoords) {
+            newMarkers.push({
+                position: originCoords,
+                type: "origin",
+                info: "Starting Point"
+            })
+        }
+
+        if (destinationCoords) {
+            newMarkers.push({
+                position: destinationCoords,
+                type: "destination",
+                info: "Destination Point"
+            })
+        }
         // Weather markers
         if (tripData.weather) {
             Object.entries(tripData.weather).forEach(([location, data]) => {
@@ -116,11 +138,6 @@ const MapView = ({ tripData }) => {
                                         subtype: category,
                                         info: `${item.name}<br>Type: ${category}<br>Rating: ${item.rating || "N/A"}<br>Address: ${item.address || "N/A"}<br>Phone: ${item.phone_number || "N/A"}`
                                     });
-                                    // console.log("Added recommendation marker:", {
-                                    //     subtype: category,
-                                    //     name: item.name,
-                                    //     coords: item.coords
-                                    // });
                                 }
                             });
                         }
@@ -151,8 +168,12 @@ const MapView = ({ tripData }) => {
                 <Marker
                     key={index}
                     position={marker.position}
-                    icon={marker.type === "weather" 
-                    ? weatherIcon 
+                    icon={marker.type === "origin" 
+                    ? originIcon 
+                    : marker.type === "destination"
+                    ? destinationIcon
+                    : marker.type === "weather"
+                    ? weatherIcon
                     : marker.type === "traffic" 
                     ? trafficIcon 
                     : marker.type === "recommendation" && marker.subtype === "restaurants"

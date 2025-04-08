@@ -16,7 +16,11 @@ import logging
 
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
 def is_similar(a, b, threshold=0.8):
@@ -63,13 +67,13 @@ class RecommendationAgent:
             geocode_start = time.time()
             lat_lng = cache_manager.get_cached('geocode', loc)
             if lat_lng:
-                logger.info(f"Cache HIT: Geocoding for {loc}")
+                logger.debug(f"Cache HIT: Geocoding for {loc}")
             else:
-                logger.info(f"Cache MISS: Geocoding for {loc}")
+                logger.debug(f"Cache MISS: Geocoding for {loc}")
                 lat_lng = await self._get_lat_lng(loc)
                 if lat_lng:
                     cache_manager.set_cached('geocode', loc, lat_lng)
-                    logger.info(f"Cached geocoding result for {loc}")
+                    logger.debug(f"Cached geocoding result for {loc}")
             geocode_time = time.time() - geocode_start
             logger.info(f"Geocoding took {geocode_time:.2f} seconds")
 
@@ -82,43 +86,46 @@ class RecommendationAgent:
             cache_key = f"{lat_lng}_restaurant"
             restaurants = cache_manager.get_cached('places', cache_key)
             if restaurants:
-                logger.info(f"Cache HIT:  Restaurants for {loc}")
+                logger.debug(f"Cache HIT:  Restaurants for {loc}")
             else:
-                logger.info(f"Cache MISS: Restaurants for {loc}")
+                logger.debug(f"Cache MISS: Restaurants for {loc}")
                 restaurants = await self._fetch_places(lat_lng, "restaurant")
                 if restaurants:
                     cache_manager.set_cached('places', cache_key, restaurants)
-                    logger.info(f"Cached {len(restaurants)} restaurants for {loc}")
+                    logger.debug(f"Cached {len(restaurants)} restaurants for {loc}")
 
             # Try to get cached places results for hotels
             cache_key = f"{lat_lng}_lodging"
             hotels = cache_manager.get_cached('places', cache_key)
             if hotels:
-                logger.info(f"Cache HIT:  Hotels for {loc}")
+                logger.debug(f"Cache HIT:  Hotels for {loc}")
             else:
-                logger.info(f"Cache MISS:  Hotels for {loc}")
+                logger.debug(f"Cache MISS:  Hotels for {loc}")
                 hotels = await self._fetch_places(lat_lng, "lodging")
                 if hotels:
                     cache_manager.set_cached('places', cache_key, hotels)
-                    logger.info(f"Cached {len(hotels)} hotels for {loc}")
+                    logger.debug(f"Cached {len(hotels)} hotels for {loc}")
 
             # Get attractions across multiple categories
             attractions_start = time.time()
-            attractions = []
+            all_attractions = []
             for attraction_type in self.attraction_types:
                 cache_key = f"{lat_lng}_{attraction_type}"
                 cached_attractions = cache_manager.get_cached('places', cache_key)
                 if cached_attractions:
-                    logger.info(f"Cache HIT: {attraction_type} for {loc}")
-                    attractions.extend(cached_attractions)
+                    logger.debug(f"Cache HIT: {attraction_type} for {loc}")
+                    all_attractions.extend(cached_attractions)
                 else:
-                    logger.info(f"Cache MISS: {attraction_type} for {loc}")
+                    logger.debug(f"Cache MISS: {attraction_type} for {loc}")
                     type_attractions = await self._fetch_places(lat_lng, attraction_type)
                     if type_attractions:
                         cache_manager.set_cached('places', cache_key, type_attractions)
-                        logger.info(f"Cached {len(type_attractions)} {attraction_type} for {loc}")
-                        attractions.extend(type_attractions)
+                        logger.debug(f"Cached {len(type_attractions)} {attraction_type} for {loc}")
+                        all_attractions.extend(type_attractions)
 
+            # Process attractionsto get unique attractions and limit to 5
+            unique_attractions = {p["place_id"]: p for p in all_attractions}.values()
+            attractions = list(unique_attractions)[:5]
             attractions_time = time.time() - attractions_start
             logger.info(f"Attractions fetching took {attractions_time:.2f} seconds")
 
@@ -137,14 +144,14 @@ class RecommendationAgent:
                 cache_key = f"details_{place['place_id']}"
                 details = cache_manager.get_cached('details', cache_key)
                 if details:
-                    logger.info(f"Cache HIT:  Details for place {place['place_id']}")
+                    logger.debug(f"Cache HIT:  Details for place {place['place_id']}")
                     place_details.append(details)
                 else:
-                    logger.info(f"Cache MISS: Details for place {place['place_id']}")
+                    logger.debug(f"Cache MISS: Details for place {place['place_id']}")
                     details = await self._get_place_details(place['place_id'])
                     if details:
                         cache_manager.set_cached('details', cache_key, details)
-                        logger.info(f"Cached details for place {place['place_id']}")
+                        logger.debug(f"Cached details for place {place['place_id']}")
                         place_details.append(details)
             
             details_time = time.time() - details_start
@@ -197,11 +204,12 @@ class RecommendationAgent:
                }
            )
            result = response.json()
-           return [{
+           places = [{
                "name": p["name"],
                "place_id": p.get("place_id"),
                "coords": [p["geometry"]["location"]["lat"], p["geometry"]["location"]["lng"]],
            } for p in result.get("results", []) if p.get("place_id")] 
+           return places[:5]
         except Exception as e:
             logger.error(f"Error fetching places for {location}: {str(e)}")
             return []
@@ -216,10 +224,10 @@ class RecommendationAgent:
             cache_key = f"details_{'place_id'}"
             cached_details = cache_manager.get_cached('details', cache_key)
             if cached_details:
-                logger.info(f"Cache HIT:  Place details for {place.get('name', 'Unknown')}")
+                logger.debug(f"Cache HIT:  Place details for {place_id}")
                 return cached_details
 
-            logger.info(f"Cache MISS:  Place details for {place_id}")
+            logger.debug(f"Cache MISS:  Place details for {place_id}")
             response = await self.http_client.get(
                 self.details_url,
                 params={
@@ -242,10 +250,10 @@ class RecommendationAgent:
 
                 # Cache the place details
                 cache_manager.set_cached('details', cache_key, place_details)
-                logger.info(f"Cached place details for {place_details['name']}")
+                logger.debug(f"Cached place details for {place_details['name']}")
                 return place_details
         except Exception as e:
-            logger.error(f"Error getting place details for {place_id}: {str(e)}")
+            logger.error(f"Error getting place details for place_id {place_id}: {str(e)}")
 
         return None
     

@@ -9,12 +9,14 @@ import traceback
 import json
 import asyncio
 import time
+import logging
 
 router = APIRouter()
 travel_agent = TravelAgent()
 traffic_agent = TrafficAgent()
 weather_agent = WeatherAgent()
 recommendation_agent = RecommendationAgent()
+logger = logging.getLogger(__name__)
 
 @router.post("/api/plan_trip", response_model=dict)
 async def plan_trip(request: RouteRequest):
@@ -55,24 +57,29 @@ async def plan_trip(request: RouteRequest):
             traffic_info = [traffic_info] if traffic_info else []
 
         # Fetch weather alerts
-        weather_stops = [request.origin] + waypoints_list + [request.destination]
-        weather_info = weather_agent.get_weather({
-            "waypoints": weather_stops
+        weather_stops = [request.origin]
+        if request.waypoints:
+            weather_stops.extend(request.waypoints)
+        weather_stops.append(request.destination)
+
+        logger.info(f"Fetching weather for stops: {weather_stops}")
+        weather_info = await weather_agent.get_weather({
+            "waypoints": weather_stops,
+            "legs": route_info[0] if isinstance(route_info, list) else route_info  # Pass the route info to ensure we have all stops
         })
 
         # Ensure destination is included in weather lookup
-        # if request.destination not in weather_info:
-        #     dest_weather = weather_agent.get_weather({"waypoints": [request.destination]})
-        #     if isinstance(dest_weather, list):
-        #         weather_info.update(dest_weather)
+        if request.destination not in weather_info:
+            logger.info(f"Destination {request.destination} not in weather info, fetching separately")
+            dest_weather = await weather_agent.get_weather({"waypoints": [request.destination]})
+            if isinstance(dest_weather, dict):
+                weather_info.update(dest_weather)
+                logger.info("Added destination weather data")
 
         # Fetch AI-driven recommendations for food, lodging, and activities
         # recommendations = await recommendation_agent.get_recommendations(request.waypoints)
         recommendations = await recommendation_agent.get_recommendations(
             request.waypoints
-            # food_preference="Any",
-            # lodging_preference="hotel",
-            # attraction_preference=request.attraction_preferences or ["museum"]
         )
 
         # if not isinstance(recommendations, list):

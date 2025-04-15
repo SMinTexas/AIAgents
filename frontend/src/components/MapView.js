@@ -15,31 +15,31 @@ const destinationIcon = new L.Icon({
     iconSize: [30, 30]
 })
 
-// const weatherIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-//     iconSize: [30, 30]
-// });
+const weatherIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+    iconSize: [30, 30]
+});
 
 const trafficIcon = new L.Icon({
     iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
     iconSize: [30, 30]
 });
-// const recommendationIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-//     iconSize: [30, 30]
-// });
-// const restaurantIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/orange-dot.png",
-//     iconSize: [30, 30]
-// });
-// const hotelIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
-//     iconSize: [30, 30]
-// });
-// const attractionIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
-//     iconSize: [30, 30]
-// });
+const recommendationIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+    iconSize: [30, 30]
+});
+const restaurantIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/orange-dot.png",
+    iconSize: [30, 30]
+});
+const hotelIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
+    iconSize: [30, 30]
+});
+const attractionIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+    iconSize: [30, 30]
+});
 
 // Traffic congestion colors
 const congestionColors = {
@@ -230,7 +230,15 @@ const MapView = ({ tripData }) => {
                     ? originIcon
                     : marker.type === "destination"
                     ? destinationIcon
-                    : trafficIcon}
+                    : marker.type === "traffic"
+                    ? trafficIcon
+                    : marker.type === "recommendation" && marker.subtype === "attractions"
+                    ? attractionIcon
+                    : marker.type === "recommendation" && marker.subtype === "hotels"
+                    ? hotelIcon
+                    : marker.type === "recommendation" && marker.subtype === "restaurants"
+                    ? restaurantIcon
+                    : recommendationIcon}
                 >
                     <Popup>
                         <div dangerouslySetInnerHTML={{ __html: marker.info }} />

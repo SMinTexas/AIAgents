@@ -6,12 +6,12 @@ import L from "leaflet";
 
 // Custom marker icons
 const originIcon = new L.Icon({
-    iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-pushpin.png",
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/star.png",
     iconSize: [30, 30]
 })
 
 const destinationIcon = new L.Icon({
-    iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-pushpin.png",
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/flag.png",
     iconSize: [30, 30]
 })
 
@@ -58,80 +58,111 @@ const MapView = ({ tripData }) => {
     const [routeSegments, setRouteSegments] = useState([]);
 
     useEffect(() => {
-        if (!tripData?.route?.coordinates) {
-            console.warn("No route coordinates available");
+        const renderStart = performance.now();
+        // console.log("Rendering map and markers started ...");
+        if (!tripData || !tripData.route) {
+            console.warn("No route data received in frontend");
             return;
         }
 
-        try {
-            const routeCoordinates = tripData.route.coordinates.map(coord => [coord[0], coord[1]]);
-            console.log("Route coordinates:", routeCoordinates);
-            console.log("Total route coordinates:", routeCoordinates.length);
-            console.log("First coordinate (origin):", routeCoordinates[0]);
-            console.log("Last coordinate (destination):", routeCoordinates[routeCoordinates.length - 1]);
-            console.log("Destination coords from route data:", tripData.route.destination_coords);
+        if (!tripData?.route?.coordinates || !Array.isArray(tripData.route.coordinates)) {
+            console.warn("No valid route coordinates available");
+            return;
+        }
 
-            if (routeCoordinates.length > 0) {
-                // Get the destination coordinates from the route data or use the last coordinate
-                const destinationCoords = tripData.route.destination_coords || routeCoordinates[routeCoordinates.length - 1];
-                console.log("Using Destination Coordinates:", destinationCoords);
+        const routeCoordinates = tripData.route.coordinates.map(coord => [coord[0], coord[1]]);
 
-                // Use the route coordinates as is, since they already extend to the destination
-                const completeRoute = [...routeCoordinates];
+        setRoute(routeCoordinates);
 
-                setRoute(routeCoordinates);
-                // Set map center to origin
-                setCenter(routeCoordinates[0]);
+        // Set map center to origin
+        const originCoords = tripData.route?.[0]?.coordinates?.[0] || [29.7858, -95.8244];
+        const destinationCoords = tripData.route?.coordinates?.[tripData.route.coordinates.length -1] || null;
+        setCenter(originCoords);
 
-                const newMarkers = [
-                    {
-                        position: completeRoute[0],
-                        type: "origin",
-                        info: "Starting Point"
-                    },
-                    {
-                        position: destinationCoords,
-                        type: "destination",
-                        info: "Destination Point"
-                    }
-                ];
+        // Add markers for waypoints, weather, traffic, and recommendations
+        const newMarkers = [];
 
-                // Add traffic markers if available
-                if (tripData.traffic?.[0]?.estimated_stops) {
-                    const stops = tripData.traffic[0].estimated_stops;
-                    // console.log("Traffic stops:", stops);
+        if (originCoords) {
+            newMarkers.push({
+                position: originCoords,
+                type: "origin",
+                info: "Starting Point"
+            })
+        }
 
-                    stops.forEach((stop, index) => {
-                        if (stop.coords) {
-                            // console.log(`Processing stop ${index}:`, stop);
-                            // Add traffic marker
-                            newMarkers.push({
-                                position: stop.coords,
-                                type: "traffic",
-                                info: `<b>Stop:</b> ${stop.stop}<br />
-                                <b>Arrival:</b> ${stop.arrival_date_time}<br />
-                                <b>Travel Time:</b> ${stop.travel_time}<br />
-                                <b>Stop Duration:</b> ${stop.stop_duration || "Final Destination"}<br />
-                                <b>Congestion:</b> ${stop.congestion_level}<br />
-                                <b>Traffic Delay:</b> ${Math.round(stop.traffic_delay / 60)} minutes`
+        if (destinationCoords) {
+            newMarkers.push({
+                position: destinationCoords,
+                type: "destination",
+                info: "Destination Point"
+            })
+        }
+        // Weather markers
+        if (tripData.weather) {
+            Object.entries(tripData.weather).forEach(([location, data]) => {
+                if (data && data.coords) {
+                    newMarkers.push({
+                        position: data.coords,
+                        type: "weather",
+                        info: `${data.condition}, ${data.temperature}`
+                    });
+                }
+            });
+        } else {
+            console.warn("No valid weather data found.");
+        }
+
+        // Traffic markers
+        if (tripData.traffic?.[0]?.estimated_stops) {
+            tripData.traffic[0].estimated_stops.forEach((stop) => {
+                if (stop.coords) {
+                    newMarkers.push({
+                        position: stop.coords,
+                        type: "traffic",
+                        info: `<b>Stop:</b> ${stop.stop}<br />
+                            <b>Arrival:</b> ${stop.arrival_date_time}<br />
+                            <b>Travel Time:</b> ${stop.travel_time}<br />
+                            <b>Stop Duration:</b> ${stop.stop_duration || "Final Destination"}
+                        `
+                    });
+                }
+            });
+        } else {
+            console.warn("No valid traffic data found.");
+        }
+
+        // Recommendation markers
+        if (tripData.recommendations) {
+            Object.entries(tripData.recommendations).forEach(([city, recs]) => {
+                console.log(`City: ${city}`, recs);
+                const categories = ["restaurants", "hotels", "attractions"];
+                try {
+                    categories.forEach((category) => {
+                        const items = recs[category];
+                        if (Array.isArray(items)) {
+                            items.forEach((item) => {
+                                if (item.coords) {
+                                    newMarkers.push({
+                                        position: item.coords,
+                                        type: "recommendation",
+                                        subtype: category,
+                                        info: `${item.name}<br>Type: ${category}<br>Rating: ${item.rating || "N/A"}<br>Address: ${item.address || "N/A"}<br>Phone: ${item.phone_number || "N/A"}`
+                                    });
+                                }
                             });
                         }
                     });
+                } catch (error) {
+                    console.error("Error while building recommendation markers:", error);   
                 }
-
-                // Create a single route segment for the entire route
-                setRouteSegments([{
-                    position: completeRoute,
-                    color: congestionColors.light
-                }]);
-
-                setMarkers(newMarkers);
-            }
-
-            
-        } catch (error) {
-            console.error("Error processing route coordinates:", error);
+            });
+        } else {
+            console.warn("No valid recommendations found");
         }
+
+        setMarkers(newMarkers);
+        const renderEnd = performance.now();
+        // console.log(`Map and markers rendered in ${(renderEnd - renderStart).toFixed(2)} ms`);
     }, [tripData]);
 
     // Helper function to check if two points are near each other

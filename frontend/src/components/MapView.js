@@ -16,12 +16,12 @@ const destinationIcon = new L.Icon({
 })
 
 const weatherIcon = new L.Icon({
-    iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-pushpin.png",
     iconSize: [30, 30]
 });
 
 const trafficIcon = new L.Icon({
-    iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/orange-dot.png",
     iconSize: [30, 30]
 });
 
@@ -34,20 +34,20 @@ const waypointIcon = new L.Icon({
     iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-pushpin.png",
     iconSize: [30, 30]
 })
-// const restaurantIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-//     iconSize: [30, 30]
-// });
+const restaurantIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+    iconSize: [30, 30]
+});
 
-// const hotelIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
-//     iconSize: [30, 30]
-// });
+const hotelIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
+    iconSize: [30, 30]
+});
 
-// const attractionIcon = new L.Icon({
-//     iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
-//     iconSize: [30, 30]
-// });
+const attractionIcon = new L.Icon({
+    iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+    iconSize: [30, 30]
+});
 
 const MapView = ({ tripData }) => {
     // Default center coordinates (will be updated when route data is available)
@@ -70,7 +70,7 @@ const MapView = ({ tripData }) => {
             console.warn("No valid route data available");
             return;
         }
-
+        
         try {
             const routeCoordinates = tripData.route.coordinates
                 .filter(coord => Array.isArray(coord) && coord.length >= 2)
@@ -95,16 +95,19 @@ const MapView = ({ tripData }) => {
             setMapBounds(bounds);
 
             // Add origin and destination markers
+            console.log(tripData.route);
+            console.log(destinationCoords);
+            var lastIndex = tripData.route.legs.length - 1;
             const newMarkers = [
                 {
                     position: routeCoordinates[0],
                     type: "origin",
-                    info: "Starting Point"
+                    info: `<b>Starting Point:</b> ${tripData.route.legs[0].start_address}`
                 },
                 {
                     position: destinationCoords,
                     type: "destination",
-                    info: "Destination Point"
+                    info: `<b>Destination:</b> ${tripData.route.legs[lastIndex].end_address}`
                 }
             ];
 
@@ -139,54 +142,121 @@ const MapView = ({ tripData }) => {
             }
 
             // Add weather markers if available
-            if (tripData.weather && Array.isArray(tripData.weather)) {
-                tripData.weather.forEach((weather, index) => {
-                    if (weather && weather.coords && Array.isArray(weather.coords) && weather.coords.length >= 2) {
-                        newMarkers.push({
-                            position: weather.coords,
-                            type: "weather",
-                            info: `<b>Weather:</b> ${weather.condition || "Unknown"}<br />
-                                <b>Temperature:,/b> ${weather.temperature || "N/A"}<br />
-                                <b>Precipitation:</b> ${weather.precipitation || "N/A"}%`
-                        });
-                    }
-                });
-            }
+            // if (tripData.weather && Array.isArray(tripData.weather)) {
+            //     tripData.weather.forEach((weather, index) => {
+            //         if (weather && weather.coords && Array.isArray(weather.coords) && weather.coords.length >= 2) {
+            //             newMarkers.push({
+            //                 position: weather.coords,
+            //                 type: "weather",
+            //                 info: `<b>Weather:</b> ${weather.condition || "Unknown"}<br />
+            //                     <b>Temperature:,/b> ${weather.temperature || "N/A"}<br />
+            //                     <b>Precipitation:</b> ${weather.precipitation || "N/A"}%`
+            //             });
+            //         }
+            //     });
+            // }
 
             // Add traffic markers if available
-            if (tripData.traffic && tripData.traffic.incidents && Array.isArray(tripData.traffic.incidents)) {
-                tripData.traffic.incidents.forEach((incident, index) => {
-                    if (incident && incident.coords && Array.isArray(incident.coords) && incident.coords.length >= 2) {
+            // if (tripData.traffic && tripData.traffic.incidents && Array.isArray(tripData.traffic.incidents)) {
+            //     tripData.traffic.incidents.forEach((incident, index) => {
+            //         if (incident && incident.coords && Array.isArray(incident.coords) && incident.coords.length >= 2) {
+            //             newMarkers.push({
+            //                 position: incident.coords,
+            //                 type: "traffic",
+            //                 info: `<b>Traffic Incident:</b> ${incident.description || "Unknown"}<br />
+            //                     <b>Severity:</b> ${incident.severity || "N/A"}<br />
+            //                     <b>Delay:</b> ${incident.delay || "N/A"} minutes`
+            //             });
+            //         }
+            //     });
+            // }
+
+            // Add recommendation markers if available
+            // if (tripData.recommendations && Array.isArray(tripData.recommendations)) {
+            //     tripData.recommendations.forEach((recommendation) => {
+            //         if (recommendation && recommendation.coords && Array.isArray(recommendation.coords) && recommendation.coords.length >= 2) {
+            //             // Add recommendation marker
+            //             newMarkers.push({
+            //                 position:  recommendation.coords,
+            //                 type: "recommendation",
+            //                 info: `<b>${recommendation.name || "Attraction"}</b><br />
+            //                     <b>Type:</b> ${recommendation.type || "Unknown"}<br />
+            //                     <b>Address:</b> ${recommendation.address || "N/A"}<br />
+            //                     <b>Phone:</b> ${recommendation.phone_number || "N/A"}<br />
+            //                     <b>Rating:</b> ${recommendation.rating || "N/A"}<br />
+            //                     <b>Description:</b> ${recommendation.description || "No description available"}`
+            //             })
+            //         }
+            //     })
+            // }
+
+            // Weather markers
+            if (tripData.weather) {
+                Object.entries(tripData.weather).forEach(([location, data]) => {
+                    if (data && data.coords) {
                         newMarkers.push({
-                            position: incident.coords,
-                            type: "traffic",
-                            info: `<b>Traffic Incident:</b> ${incident.description || "Unknown"}<br />
-                                <b>Severity:</b> ${incident.severity || "N/A"}<br />
-                                <b>Delay:</b> ${incident.delay || "N/A"} minutes`
+                            position: data.coords,
+                            type: "weather",
+                            info: `${data.condition}, ${data.temperature}`
                         });
                     }
                 });
+            } else {
+                console.warn("No valid weather data found.");
             }
 
-            // Add recommendation markers if available
-            if (tripData.recommendations && Array.isArray(tripData.recommendations)) {
-                tripData.recommendations.forEach((recommendation) => {
-                    if (recommendation && recommendation.coords && Array.isArray(recommendation.coords) && recommendation.coords.length >= 2) {
-                        // Add recommendation marker
+            // Traffic markers
+            if (tripData.traffic?.[0]?.estimated_stops) {
+                tripData.traffic[0].estimated_stops.forEach((stop) => {
+                    if (stop.coords) {
                         newMarkers.push({
-                            position:  recommendation.coords,
-                            type: "recommendation",
-                            info: `<b>${recommendation.name || "Attraction"}</b><br />
-                                <b>Type:</b> ${recommendation.type || "Unknown"}<br />
-                                <b>Address:</b> ${recommendation.address || "N/A"}<br />
-                                <b>Phone:</b> ${recommendation.phone_number || "N/A"}<br />
-                                <b>Rating:</b> ${recommendation.rating || "N/A"}<br />
-                                <b>Description:</b> ${recommendation.description || "No description available"}`
-                        })
+                            position: stop.coords,
+                            type: "traffic",
+                            info: `<b>Stop:</b> ${stop.stop}<br />
+                                <b>Arrival:</b> ${stop.arrival_date_time}<br />
+                                <b>Travel Time:</b> ${stop.travel_time}<br />
+                                <b>Stop Duration:</b> ${stop.stop_duration || "Final Destination"}
+                            `
+                        });
                     }
-                })
+                });
+            } else {
+                console.warn("No valid traffic data found.");
             }
 
+            // Recommendation markers
+            if (tripData.recommendations) {
+                Object.entries(tripData.recommendations).forEach(([city, recs]) => {
+                    console.log(`City: ${city}`, recs);
+                    const categories = ["restaurants", "hotels", "attractions"];
+                    try {
+                        categories.forEach((category) => {
+                            const items = recs[category];
+                            if (Array.isArray(items)) {
+                                items.forEach((item) => {
+                                    if (item.coords) {
+                                        newMarkers.push({
+                                            position: item.coords,
+                                            type: "recommendation",
+                                            subtype: category,
+                                            info: `${item.name}<br>Type: ${category}<br>Rating: ${item.rating || "N/A"}<br>Address: ${item.address || "N/A"}<br>Phone: ${item.phone_number || "N/A"}`
+                                        });
+                                        // console.log("Added recommendation marker:", {
+                                        //     subtype: category,
+                                        //     name: item.name,
+                                        //     coords: item.coords
+                                        // });
+                                    }
+                                });
+                            }
+                        });
+                    } catch (error) {
+                        console.error("Error while building recommendation markers:", error);   
+                    }
+                });
+            } else {
+                console.warn("No valid recommendations found");
+            }
             // Create route segments based on traffic data if available
             if (tripData.traffic && tripData.traffic.segments && tripData.traffic.segments.length > 0) {
                 const segments = [];
@@ -308,7 +378,18 @@ const MapView = ({ tripData }) => {
                 <Marker
                 key={index}
                 position={marker.position}
-                icon={getMarkerIcon(marker.type)}
+                icon={marker.type === "weather" 
+                     ? weatherIcon 
+                     : marker.type === "traffic" 
+                     ? trafficIcon 
+                     : marker.type === "recommendation" && marker.subtype === "restaurants"
+                     ? restaurantIcon
+                     : marker.type === "recommendation" && marker.subtype === "hotels"
+                     ? hotelIcon
+                     : marker.type === "recommendation" && marker.subtype === "attractions"
+                     ? attractionIcon
+                     : recommendationIcon
+            }
                 >
                     <Popup>
                         <div dangerouslySetInnerHTML={{ __html: marker.info }} />

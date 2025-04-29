@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import MapView from "./components/MapView";
+// import MapView from "./components/MapView";
+import Home from "./pages/Home";
 import "leaflet/dist/leaflet.css";
 
 window.onerror = function (message, source, lineno, colno, error) {
@@ -76,65 +77,14 @@ const App = () => {
 
   return (
     <div>
-      <h1>AI Travel Planner</h1>
+      {/* <h1>AI Travel Planner</h1> */}
 
-      {/* Input Form */}
-      <form>
-        <label>Origin:</label>
-        <input
-          type="text"
-          value={origin}
-          onChange={(e) => setOrigin(e.target.value)}
-        />
-        <label>Destination:</label>
-        <input
-          type="text"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-        />
-        <label>Waypoints (separate by `;`):</label>
-        <input
-          type="text"
-          value={waypoints}
-          onChange={(e) => setWaypoints(e.target.value)}
-        />
-        <label>Departure Date/Time:</label>
-        <input
-          type="datetime-local"
-          value={departure_time}
-          onChange={(e) => setDepartureTime(e.target.value)}
-        />
-        <label>Stop Durations (comma-separated in hours):</label>
-        <input
-          type="text"
-          value={stopDurations}
-          onChange={(e) => setStopDurations(e.target.value)}
-        />
-        <label>Attraction Preferences (comma-separated):</label>
-        <input
-          type="text"
-          value={attractionPrefs}
-          onChange={(e) => setAttractionPrefs(e.target.value)}
-        />
-
-        <button type="button" onClick={handleSubmit}>Plan Trip</button>
-      </form>
-
-      {/* Map Component */}
       {/* {isRouteLoading ? (
-        <p>Loading route ...</p>
-      ) : tripData && 
-          tripData.route && 
-          Array.isArray(tripData.route.coordinates) &&
-          tripData.route.coordinates.length > 0 ? (
-          <MapView tripData={tripData} /> 
-      ) : null} */}
-
-      {isRouteLoading ? (
         <p>Loading route ...</p>
       ) : tripData ? (
         <MapView tripData={tripData} />
-      ) : null}
+      ) : null} */}
+      <Home />
     </div>
   )
 }

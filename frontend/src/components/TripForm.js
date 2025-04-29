@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+console.log("TripForm component loaded - NEW VERSION");
 const TripForm = ({ onSubmit }) => {
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState("");
@@ -32,7 +32,7 @@ const TripForm = ({ onSubmit }) => {
             });
         }
 
-        setErrors(newError);
+        setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 

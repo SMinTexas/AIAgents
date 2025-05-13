@@ -2,23 +2,23 @@ from fastapi import APIRouter, Query
 import polyline
 from models import RouteRequest
 from agents.agent import TravelAgent
-from agents.traffic_agent import TrafficAgent
 from agents.weather_agent import WeatherAgent
 from agents.recommendation_agent import RecommendationAgent
 import traceback
 import json
 import asyncio
 import time
+import logging
 
 router = APIRouter()
 travel_agent = TravelAgent()
-traffic_agent = TrafficAgent()
 weather_agent = WeatherAgent()
 recommendation_agent = RecommendationAgent()
+logger = logging.getLogger(__name__)
 
 @router.post("/api/plan_trip", response_model=dict)
 async def plan_trip(request: RouteRequest):
-    """ AI-powered trip planner that integrates route, traffic, weather, and recommendations """
+    """ AI-powered trip planner that integrates route, weather, and recommendations """
     try:
         # print(f"\n Incoming API request: {request}")
         start_time = time.time()
@@ -42,51 +42,35 @@ async def plan_trip(request: RouteRequest):
         if not isinstance(route_info, list):
             route_info = [route_info] if route_info else []
 
-        # Fetch real-time traffic data
-        traffic_info = traffic_agent.get_traffic(
-            request.origin, 
-            request.destination, 
-            request.waypoints, 
-            departure_time, 
-            stop_durations
-        )
-
-        if not isinstance(traffic_info, list):
-            traffic_info = [traffic_info] if traffic_info else []
-
         # Fetch weather alerts
-        weather_stops = [request.origin] + waypoints_list + [request.destination]
-        weather_info = weather_agent.get_weather({
-            "waypoints": weather_stops
+        weather_stops = [request.origin]
+        if request.waypoints:
+            weather_stops.extend(request.waypoints)
+        weather_stops.append(request.destination)
+        
+        logger.info(f"Fetching weather for stops: {weather_stops}")
+        weather_info = await weather_agent.get_weather({
+            "waypoints": weather_stops,
+            "legs": route_info[0] if isinstance(route_info, list) else route_info  # Pass the route info to ensure we have all stops
         })
 
         # Ensure destination is included in weather lookup
-        # if request.destination not in weather_info:
-        #     dest_weather = weather_agent.get_weather({"waypoints": [request.destination]})
-        #     if isinstance(dest_weather, list):
-        #         weather_info.update(dest_weather)
+        if request.destination not in weather_info:
+            logger.info(f"Destination {request.destination} not in weather info, fetching separately")
+            dest_weather = await weather_agent.get_weather({"waypoints": [request.destination]})
+            if isinstance(dest_weather, dict):
+                weather_info.update(dest_weather)
+                logger.info("Added destination weather data")
 
         # Fetch AI-driven recommendations for food, lodging, and activities
-        # recommendations = await recommendation_agent.get_recommendations(request.waypoints)
-        recommendations = await recommendation_agent.get_recommendations(
-            request.waypoints
-            # food_preference="Any",
-            # lodging_preference="hotel",
-            # attraction_preference=request.attraction_preferences or ["museum"]
-        )
-
-        # if not isinstance(recommendations, list):
-        #     recommendations = [recommendations] if recommendations else []
+        recommendations = await recommendation_agent.get_recommendations(request.waypoints)
 
         response_data = {
             "route": route_info,
-            "traffic": traffic_info,
             "weather": weather_info,
             "recommendations": recommendations
         }
 
-        # print(f"\n Final Traffic Object (before return)")
-        # print(json.dumps(traffic_info, indent=2))
         # print(f"Backend trip planning completed in {time.time() - start_time:.2f} seconds")
         return response_data
     

@@ -1,0 +1,32 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 8e38132..d4e24e3 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -2,12 +2,14 @@[m
+ .DS_Store   # macOS system file[m
+ *.log       # Log files[m
+ .env        # Environment variables file[m
+[32m+[m[32mbackend/.env[m
+[32m+[m[32m**/.env     # Any .env file in any directory[m
+ [m
+ # == Python (backend) ==[m
+[31m-__pycache__/   # Python cache files[m
+[31m-*.pyc          # Python compiled files[m
+[31m-*.pyo          # Python optimized files[m
+[31m-*.pyd[m
+[32m+[m[32m**/__pycache__/   # Python cache files in any directory[m
+[32m+[m[32m**/*.pyc          # Python compiled files in any directory[m
+[32m+[m[32m**/*.pyo          # Python optimized files[m
+[32m+[m[32m**/*.pyd[m
+ pip-log.txt[m
+ [m
+ # == Node.js (frontend) ==[m
+[36m@@ -28,7 +30,6 @@[m [mbuild/[m
+ out/[m
+ *.log[m
+ [m
+[31m-[m
+ # == VS Code ==[m
+ .vscode/  # Visual Studio Code settings[m
+ .Python[m

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-console.log("TripForm component loaded - NEW VERSION");
+console.log("NewTripForm component loaded");
 
-const TripForm = ({ onSubmit }) => {
+const NewTripForm = ({ onSubmit }) => {
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState("");
     const [waypoints, setWaypoints] = useState([""]);
@@ -185,4 +185,4 @@ const TripForm = ({ onSubmit }) => {
     );
 };
 
-export default TripForm;
+export default NewTripForm; 

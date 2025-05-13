@@ -1,0 +1,210 @@
+import React, { useState } from 'react';
+import './TripPlannerForm.css';
+
+const ATTRACTION_TYPES = [
+    { id: 'museum', label: 'Museum' },
+    { id: 'tourist_attraction', label: 'Tourist Attraction' },
+    { id: 'shopping_mall', label: 'Shopping Mall' },
+    { id: 'zoo', label: 'Zoo' },
+    { id: 'casino', label: 'Casino' },
+    { id: 'aquarium', label: 'Aquarium' },
+    { id: 'amusement_park', label: 'Amusement Park' },
+    { id: 'art_gallery', label: 'Art Gallery' },
+    { id: 'bowling_alley', label: 'Bowling Alley' },
+    { id: 'movie_theater', label: 'Movie Theater' },
+    { id: 'night_club', label: 'Night Club' },
+    { id: 'park', label: 'Park' },
+    { id: 'stadium', label: 'Stadium' },
+    { id: 'theme_park', label: 'Theme Park' },
+    { id: 'restaurant', label: 'Restaurant' },
+    { id: 'lodging', label: 'Hotel' }
+];
+
+const TripPlannerForm = ({ onSubmit }) => {
+    const [formData, setFormData] = useState({
+        origin: '',
+        destination: '',
+        waypoints: [''],
+        departureTime: '',
+        stopDurations: [''],
+        attractionPreferences: ['museum', 'restaurant', 'shopping']
+    });
+
+    const handleInputChange = (e, index) => {
+        const { name, value } = e.target;
+        if (name === 'waypoints' || name === 'stopDurations') {
+            const newValues = [...formData[name]];
+            newValues[index] = value;
+            setFormData(prev => ({
+                ...prev,
+                [name]: newValues
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const handleAddWaypoint = () => {
+        setFormData(prev => ({
+            ...prev,
+            waypoints: [...prev.waypoints, ''],
+            stopDurations: [...prev.stopDurations, '']
+        }));
+    };
+
+    const handleRemoveWaypoint = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            waypoints: prev.waypoints.filter((_, i) => i !== index),
+            stopDurations: prev.stopDurations.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        
+        try {
+            // Convert stopDurations to numbers
+            const stopDurations = formData.stopDurations.map(duration => 
+                duration ? parseInt(duration) : 0
+            );
+
+            // Filter out empty waypoints
+            const waypoints = formData.waypoints.filter(wp => wp && wp.trim() !== '');
+
+            onSubmit({
+                ...formData,
+                waypoints,
+                stopDurations,
+                attractionPreferences: formData.attractionPreferences || []
+            });
+        } catch (error) {
+            console.error('Error in form submission:', error);
+        }
+    };
+
+    const handlePreferenceChange = (pref, checked) => {
+        const newPreferences = checked
+            ? [...(formData.attractionPreferences || []), pref]
+            : (formData.attractionPreferences || []).filter(p => p !== pref);
+        setFormData(prev => ({
+            ...prev,
+            attractionPreferences: newPreferences
+        }));
+    };
+
+    // Helper function to capitalize first letter
+    const capitalizeFirstLetter = (str) => {
+        if (!str || typeof str !== 'string') return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+
+    return (
+        <div>
+            <h1 className="page-header">Your Journey Awaits</h1>
+            <form onSubmit={handleSubmit} className="trip-planner-form">
+                <div className="form-group">
+                    <label>Origin:</label>
+                    <input
+                        type="text"
+                        name="origin"
+                        value={formData.origin || ''}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Enter starting location"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label>Destination:</label>
+                    <input
+                        type="text"
+                        name="destination"
+                        value={formData.destination || ''}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Enter destination"
+                    />
+                </div>
+
+                <div className="form-section">
+                    <h3>Waypoints</h3>
+                    {formData.waypoints.map((waypoint, index) => (
+                        <div key={index} className="waypoint-group">
+                            <div className="waypoint-input-group">
+                                <label htmlFor={`waypoint-${index}`}>Stop {index + 1}</label>
+                                <input
+                                    type="text"
+                                    id={`waypoint-${index}`}
+                                    value={waypoint}
+                                    onChange={(e) => handleInputChange(e, index)}
+                                    placeholder="Enter city name"
+                                    required
+                                />
+                            </div>
+                            <div className="duration-input-group">
+                                <label htmlFor={`duration-${index}`}>Stop Duration (hours)</label>
+                                <input
+                                    type="number"
+                                    id={`duration-${index}`}
+                                    value={formData.stopDurations[index] || ''}
+                                    onChange={(e) => handleInputChange(e, index)}
+                                    min="1"
+                                    max="24"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => handleRemoveWaypoint(index)}
+                                className="remove-waypoint-btn"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    ))}
+                    <button type="button" onClick={handleAddWaypoint} className="add-waypoint-btn">
+                        Add Waypoint
+                    </button>
+                </div>
+
+                <div className="form-group">
+                    <label>Departure Time:</label>
+                    <input
+                        type="datetime-local"
+                        name="departureTime"
+                        value={formData.departureTime || ''}
+                        onChange={handleInputChange}
+                        required
+                    />
+                </div>
+
+                <div className="form-section">
+                    <h3>Attraction Preferences</h3>
+                    <div className="preference-grid">
+                        {ATTRACTION_TYPES.map((type) => (
+                            <div key={type.id} className="preference-checkbox">
+                                <input
+                                    type="checkbox"
+                                    id={type.id}
+                                    checked={formData.attractionPreferences.includes(type.id)}
+                                    onChange={(e) => handlePreferenceChange(type.id, e.target.checked)}
+                                />
+                                <label htmlFor={type.id}>{type.label}</label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <button type="submit" className="submit-button">
+                    Plan Trip
+                </button>
+            </form>
+        </div>
+    );
+};
+
+export default TripPlannerForm; 

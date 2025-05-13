@@ -26,16 +26,6 @@ class RouteRequest(BaseModel):
     )
     attraction_preferences: Optional[List[str]]
 
-class TrafficRequest(BaseModel):
-    origin: str = Field(..., title="Origin", description="Starting point address", example="Katy, TX")
-    destination: str = Field(..., title="Destination", description="Ending point address", example="Orlando, FL")
-    waypoints: Optional[List[str]] = Field(
-        default=[],
-        title="Waypoints",
-        description="Intermediate stops along the route",
-        example=["New Orleans, LA", "Pensacola, FL"]
-    )
-
 class DepartureTimeRequest(BaseModel):
     origin: str = Field(..., title="Origin", description="Starting point address", example="Katy, TX")
     destination: str = Field(..., title="Destination", description="Ending point address", example="Orlando, FL")
@@ -65,10 +55,4 @@ class RouteResponse(BaseModel):
     polyline: str = Field(..., title="Encoded Polyline", description="Polyline for drawing the route on a map")
     legs: List[RouteLeg] = Field(default=[], title="Route Legs", description="Detailed breakdown of each segment of the trip")
     waypoints: List[str] = Field(default=[], title="Waypoints", description="Intermediate stops along the route", example=["New Orleans, LA", "Pensacola, FL"])
-    
-
-class TrafficResponse(BaseModel):
-    total_duration_hours: float = Field(..., title="Total Duration (hours)", description="Total duration of the route in hours", example=26.5)
-    total_duration_text: str = Field(..., title="Total Duration (text)", description="Formatted total duration of the route in hours and minutes", example="26 hours 30 minutes")
-    traffic_status: str = Field(..., title="Traffic Status", description="Traffic condition along the route", example="Heavy")
 

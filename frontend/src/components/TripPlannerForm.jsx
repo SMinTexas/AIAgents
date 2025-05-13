@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-console.log("TripForm component loaded - NEW VERSION");
+console.log("TripPlannerForm component loaded - COMPLETELY NEW COMPONENT");
 
-const TripForm = ({ onSubmit }) => {
+const TripPlannerForm = ({ onSubmit }) => {
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState("");
     const [waypoints, setWaypoints] = useState([""]);
@@ -185,4 +185,4 @@ const TripForm = ({ onSubmit }) => {
     );
 };
 
-export default TripForm;
+export default TripPlannerForm; 

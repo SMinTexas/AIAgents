@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TripForm from "../components/TripForm";
+import TripPlannerForm from "../components/TripPlannerForm";
 import MapView from "../components/MapView";
 import { getRoute } from "../api/travelService";
 
@@ -24,7 +24,7 @@ const Home = () => {
     return (
         <div>
             <h2>Plan Your Trip!</h2>
-            <TripForm onSubmit={handleTripSubmit} />
+            <TripPlannerForm onSubmit={handleTripSubmit} />
             <MapView route={[]} waypoints={waypoints} />
         </div>
     );

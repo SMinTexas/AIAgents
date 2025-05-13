@@ -1,4 +1,5 @@
 import httpx
+import httpx
 import os
 import time
 import openai
@@ -192,7 +193,9 @@ class RecommendationAgent:
         return None
 
     def _rank_with_ai(self, places, category):
-        """ Use OpenAI to rank places based on user preferences """
+        """ 
+        Use OpenAI to rank places based on user preferences 
+        """
         if not places:
             return []
         
@@ -233,13 +236,16 @@ class RecommendationAgent:
                 continue
 
             # Clean and normalize the extracted name
+            # Clean and normalize the extracted name
             cleaned_name = normalize(match.group(1))
             if not cleaned_name:
                 continue
 
             # Find the best matching place from our list
+            # Find the best matching place from our list
             close_matches = difflib.get_close_matches(cleaned_name, normalized_places.keys(), n=1, cutoff=0.7)
 
+            # If we found a match, add it to our ranked places
             # If we found a match, add it to our ranked places
             if close_matches:
                 best_match = close_matches[0]
@@ -249,9 +255,11 @@ class RecommendationAgent:
                     ranked_places.append(place)
 
             # Stop after getting 5 places
+            # Stop after getting 5 places
             if len(ranked_places) >= 5:
                 break
         
+        # If no matches were found, return the top 5 raw results
         # If no matches were found, return the top 5 raw results
         if not ranked_places:
             logger.warning(f"No matches found via AI for {category}. Using top 5 raw results.")

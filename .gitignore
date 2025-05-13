@@ -2,12 +2,12 @@
 .DS_Store   # macOS system file
 *.log       # Log files
 .env        # Environment variables file
-backend/.env
+backend/.env 
 **/.env     # Any .env file in any directory
 
 # == Python (backend) ==
-**/__pycache__/   # Python cache files in any directory
-**/*.pyc          # Python compiled files in any directory
+**/__pycache__/   # Python cache files
+**/*.pyc          # Python compiled files
 **/*.pyo          # Python optimized files
 **/*.pyd
 pip-log.txt
@@ -38,4 +38,5 @@ env/
 ENV/
 venv/
 .venv
+
 

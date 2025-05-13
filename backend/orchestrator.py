@@ -9,11 +9,13 @@ import json
 import asyncio
 import time
 import logging
+import logging
 
 router = APIRouter()
 travel_agent = TravelAgent()
 weather_agent = WeatherAgent()
 recommendation_agent = RecommendationAgent()
+logger = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
 
 @router.post("/api/plan_trip", response_model=dict)
@@ -55,6 +57,12 @@ async def plan_trip(request: RouteRequest):
         })
 
         # Ensure destination is included in weather lookup
+        if request.destination not in weather_info:
+            logger.info(f"Destination {request.destination} not in weather info, fetching separately")
+            dest_weather = await weather_agent.get_weather({"waypoints": [request.destination]})
+            if isinstance(dest_weather, dict):
+                weather_info.update(dest_weather)
+                logger.info("Added destination weather data")
         if request.destination not in weather_info:
             logger.info(f"Destination {request.destination} not in weather info, fetching separately")
             dest_weather = await weather_agent.get_weather({"waypoints": [request.destination]})

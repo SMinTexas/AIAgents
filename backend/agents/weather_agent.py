@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 class WeatherAgent:
     def __init__(self):
         """ Initialize WeatherAPI """
+        """ Initialize WeatherAPI """
         self.api_key = os.getenv("WEATHER_API_KEY")
         self.google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
         if not self.api_key or not self.google_api_key:
@@ -107,6 +108,7 @@ class WeatherAgent:
 
                 if "error" in data:
                     logger.error(f"Weather API error for {waypoint}: {data['error']['message']}")
+                    logger.error(f"Weather API error for {waypoint}: {data['error']['message']}")
                     weather_data[waypoint] = {"error": data["error"]["message"]}
                 else:
                     weather_data[waypoint] = {
@@ -136,6 +138,3 @@ class WeatherAgent:
         logger.info(f"Completed weather lookup for {len(weather_data)} locations")
         logger.info(f"Locations with weather data: {list(weather_data.keys())}")
         return weather_data
-        
-
-    

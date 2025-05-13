@@ -96,6 +96,8 @@ const MapView = ({ tripData }) => {
     const [markers, setMarkers] = useState([]);
     const [routeSegments, setRouteSegments] = useState([]);
     const [mapBounds, setMapBounds] = useState(null);
+    const [routeSegments, setRouteSegments] = useState([]);
+    const [mapBounds, setMapBounds] = useState(null);
 
     useEffect(() => {
         // Reset state when tripData changes
@@ -428,7 +430,7 @@ const MapView = ({ tripData }) => {
                 </Marker>
             ))}
         </MapContainer>
-    );
+    )
 };
 
 export default MapView;

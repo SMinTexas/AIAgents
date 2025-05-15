@@ -29,9 +29,11 @@ const TripPlannerForm = ({ onSubmit }) => {
         stopDurations: [''],
         attractionPreferences: ['museum', 'restaurant', 'shopping']
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleInputChange = (e, index) => {
         const { name, value } = e.target;
+
         if (name === 'waypoints' || name === 'stopDurations') {
             const newValues = [...formData[name]];
             newValues[index] = value;
@@ -63,10 +65,11 @@ const TripPlannerForm = ({ onSubmit }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         try {
+            setIsLoading(true);
             // Convert stopDurations to numbers
             const stopDurations = formData.stopDurations.map(duration => 
                 duration ? parseInt(duration) : 0
@@ -75,7 +78,7 @@ const TripPlannerForm = ({ onSubmit }) => {
             // Filter out empty waypoints
             const waypoints = formData.waypoints.filter(wp => wp && wp.trim() !== '');
 
-            onSubmit({
+            await onSubmit({
                 ...formData,
                 waypoints,
                 stopDurations,
@@ -83,6 +86,8 @@ const TripPlannerForm = ({ onSubmit }) => {
             });
         } catch (error) {
             console.error('Error in form submission:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -139,6 +144,7 @@ const TripPlannerForm = ({ onSubmit }) => {
                                 <input
                                     type="text"
                                     id={`waypoint-${index}`}
+                                    name="waypoints"
                                     value={waypoint}
                                     onChange={(e) => handleInputChange(e, index)}
                                     placeholder="Enter city name"
@@ -150,6 +156,7 @@ const TripPlannerForm = ({ onSubmit }) => {
                                 <input
                                     type="number"
                                     id={`duration-${index}`}
+                                    name="stopDurations"
                                     value={formData.stopDurations[index] || ''}
                                     onChange={(e) => handleInputChange(e, index)}
                                     min="1"
@@ -199,8 +206,13 @@ const TripPlannerForm = ({ onSubmit }) => {
                     </div>
                 </div>
 
-                <button type="submit" className="submit-button">
-                    Plan Trip
+                <button type="submit" className="submit-button" disabled={isLoading}>
+                    {isLoading ? (
+                        <div className="loading-indicator">
+                            <div className="loading-spinner"></div>
+                            Planning Your Trip ...
+                        </div>
+                    ) : ('Plan Trip')}
                 </button>
             </form>
         </div>

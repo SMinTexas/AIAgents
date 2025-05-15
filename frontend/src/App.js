@@ -13,7 +13,6 @@ window.addEventListener("beforeunload", (event) => {
 const App = () => {
   return (
     <div>
-      <h1>AI Travel Planner</h1>
       <NewHome />
     </div>
   );

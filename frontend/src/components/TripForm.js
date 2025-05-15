@@ -6,7 +6,6 @@ const TripForm = ({ onSubmit }) => {
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState("");
     const [waypoints, setWaypoints] = useState([""]);
-    const [waypoints, setWaypoints] = useState([""]);
     const [departureTime, setDepartureTime] = useState("");
     const [errors, setErrors] = useState({});
 
@@ -91,7 +90,6 @@ const TripForm = ({ onSubmit }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="trip-form">
         <form onSubmit={handleSubmit} className="trip-form">
             <h3>Plan Your Trip</h3>
             

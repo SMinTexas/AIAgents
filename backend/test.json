@@ -1,6 +1,6 @@
 {
-    "origin": "Katy, TX",
-    "destination": "Lake Buena Vista, FL",
+    "origin": "1403 Roundleaf Ct, Katy, TX",
+    "destination": "4600 N World Dr, Lake Buena Vista, FL",
     "waypoints": ["New Orleans, LA", "Pensacola, FL"],
     "departure_time": "2025-05-01 05:00",
     "stop_durations": [12, 12],

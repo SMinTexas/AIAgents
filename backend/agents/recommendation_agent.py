@@ -15,7 +15,7 @@ import googlemaps
 backend_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(backend_dir))
 
-from utils.cache_manager import cache_manager
+from utils import cache_manager
 import logging
 
 # Set up logging with a more concise format
@@ -25,6 +25,24 @@ logging.basicConfig(
     datefmt='%H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Valid Google Places API types
+VALID_PLACE_TYPES = {
+    'museum': 'museum',
+    'restaurant': 'restaurant',
+    'shopping_mall': 'shopping_mall',
+    'zoo': 'zoo',
+    'casino': 'casino',
+    'aquarium': 'aquarium',
+    'amusement_park': 'amusement_park',
+    'art_gallery': 'art_gallery',
+    'bowling_alley': 'bowling_alley',
+    'movie_theater': 'movie_theater',
+    'night_club': 'night_club',
+    'park': 'park',
+    'stadium': 'stadium',
+    'tourist_attraction': 'tourist_attraction'
+}
 
 def is_similar(a, b, threshold=0.8):
     return SequenceMatcher(None, a, b).ratio() > threshold
@@ -37,30 +55,45 @@ class RecommendationAgent:
         self.api_key = os.getenv("GOOGLE_MAPS_API_KEY")
         if not self.api_key:
             raise ValueError("Google Maps API key not found")
+        logger.info(f"Initializing RecommendationAgent with API Key: {self.api_key[:8]}...")
         self.gmaps = googlemaps.Client(key=self.api_key)
         self.http_client = httpx.AsyncClient()
 
+    def _process_places_results(self, results, max_results=5):
+        """ Helper method to process and sort places results """
+        if not results or 'results' not in results:
+            return []
+        
+        # Sort by rating if available
+        sorted_places = sorted(
+            results['results'],
+            key=lambda x: x.get('rating', 0),
+            reverse=True
+        )
+        return sorted_places[:max_results]
+    
     async def get_recommendations(self, locations, preferences):
         """Get recommendations for each location based on preferences"""
-        print(f"\nGetting recommendations for locations: {locations}")
-        print(f"With preferences: {preferences}")
+        logger.info(f"Getting recommendations for locations: {locations}")
+        logger.info(f"With preferences: {preferences}")
         
         recommendations = {}
         
         for location in locations:
-            print(f"\nProcessing location: {location}")
+            logger.info(f"Processing location: {location}")
             try:
                 # Get coordinates for the location
+                logger.info(f"Geocoding location: {location}")
                 geocode_result = self.gmaps.geocode(location)
                 if not geocode_result:
-                    print(f"Could not geocode location: {location}")
+                    logger.warning(f"Could not geocode location: {location}")
                     continue
                 
                 location_data = geocode_result[0]
                 lat = location_data['geometry']['location']['lat']
                 lng = location_data['geometry']['location']['lng']
                 
-                print(f"Coordinates for {location}: {lat}, {lng}")
+                logger.info(f"Coordinates for {location}: {lat}, {lng}")
                 
                 # Initialize recommendations for this location
                 recommendations[location] = {
@@ -69,50 +102,79 @@ class RecommendationAgent:
                     "attractions": []
                 }
                 
-                # Always get hotels and restaurants
-                print(f"Getting hotels for {location}")
-                hotels = self.gmaps.places_nearby(
-                    location=(lat, lng),
-                    radius=5000,
-                    type='lodging',
-                    rank_by='rating'
-                )
-                
-                if hotels and 'results' in hotels:
-                    recommendations[location]["hotels"] = hotels['results'][:5]
-                    print(f"Found {len(hotels['results'])} hotels")
-                
-                print(f"Getting restaurants for {location}")
-                restaurants = self.gmaps.places_nearby(
-                    location=(lat, lng),
-                    radius=5000,
-                    type='restaurant',
-                    rank_by='rating'
-                )
-                
-                if restaurants and 'results' in restaurants:
-                    recommendations[location]["restaurants"] = restaurants['results'][:5]
-                    print(f"Found {len(restaurants['results'])} restaurants")
-                
-                # Get attractions based on preferences
-                for preference in preferences:
-                    print(f"Getting {preference} for {location}")
-                    places = self.gmaps.places_nearby(
+                # Always get hotels
+                try:
+                    logger.info(f"Getting hotels for {location} at coordinates ({lat}, {lng})")
+                    hotels = self.gmaps.places_nearby(
                         location=(lat, lng),
-                        radius=5000,
-                        type=preference,
-                        rank_by='rating'
+                        type='lodging',
+                        radius=5000
                     )
                     
-                    if places and 'results' in places:
-                        recommendations[location]["attractions"].extend(places['results'][:5])
-                        print(f"Found {len(places['results'])} {preference}")
+                    recommendations[location]["hotels"] = self._process_places_results(hotels)
+                    logger.info(f"Found {len(recommendations[location]['hotels'])} hotels")
+
+                except Exception as e:
+                    logger.error(f"Error getting hotels for {location}: {str(e)}")
+                    logger.error(f"Error Type: {type(e)}")
+                    if hasattr(e, 'response'):
+                        logger.error(f"Response status: {e.response.status_code}")
+                        logger.error(f"Response body: {e.response.text}")
+
+                # Always get restaurants
+                try:
+                    logger.info(f"Getting restaurants for {location} at coordinates ({lat}, {lng})")
+                    restaurants = self.gmaps.places_nearby(
+                        location=(lat, lng),
+                        type='restaurant',
+                        radius=5000
+                    )
+                    
+                    recommendations[location]["restaurants"] = self._process_places_results(restaurants)
+                    logger.info(f"Found {len(recommendations[location]['restaurants'])} restaurants")
+
+                except Exception as e:
+                    logger.error(f"Error getting restaurants for {location}: {str(e)}")
+                    logger.error(f"Error Type: {type(e)}")
+                    if hasattr(e, 'response'):
+                        logger.error(f"Response status: {e.response.status_code}")
+                        logger.error(f"Response body: {e.response.text}")
+
+
+                # Get attractions based on preferences
+                for preference in preferences:
+                    if preference not in VALID_PLACE_TYPES:
+                        logger.warning(f"Invalid place type: {preference}")
+                        continue
+
+                    try:
+                        logger.info(f"Getting {preference} for {location} at coordinates ({lat}, {lng})")
+                        places = self.gmaps.places_nearby(
+                            location=(lat, lng),
+                            type=VALID_PLACE_TYPES[preference],
+                            radius=5000
+                        )
+                        
+                        attractions = self._process_places_results(places)
+                        recommendations[location]["attractions"].extend(attractions)
+                        logger.info(f"Found {len(attractions)} {preference}")
+
+                    except Exception as e:
+                        logger.error(f"Error getting {preference} for {location}: {str(e)}")
+                        logger.error(f"Error Type: {type(e)}")
+                        if hasattr(e, 'response'):
+                            logger.error(f"Response status: {e.response.status_code}")
+                            logger.error(f"Response body: {e.response.text}")
                 
             except Exception as e:
-                print(f"Error getting recommendations for {location}: {str(e)}")
+                logger.error(f"Error processing location {location}: {str(e)}")
+                logger.error(f"Error Type: {type(e)}")
+                if hasattr(e, 'response'):
+                    logger.error(f"Response status: {e.response.status_code}")
+                    logger.error(f"Response body: {e.response.text}")
                 continue
         
-        print(f"\nFinal recommendations structure: {recommendations}")
+        logger.info(f"Final recommendations structure: {recommendations}")
         return recommendations
 
     async def _get_lat_lng(self, address):
@@ -236,16 +298,13 @@ class RecommendationAgent:
                 continue
 
             # Clean and normalize the extracted name
-            # Clean and normalize the extracted name
             cleaned_name = normalize(match.group(1))
             if not cleaned_name:
                 continue
 
             # Find the best matching place from our list
-            # Find the best matching place from our list
             close_matches = difflib.get_close_matches(cleaned_name, normalized_places.keys(), n=1, cutoff=0.7)
 
-            # If we found a match, add it to our ranked places
             # If we found a match, add it to our ranked places
             if close_matches:
                 best_match = close_matches[0]
@@ -255,14 +314,106 @@ class RecommendationAgent:
                     ranked_places.append(place)
 
             # Stop after getting 5 places
-            # Stop after getting 5 places
             if len(ranked_places) >= 5:
                 break
         
-        # If no matches were found, return the top 5 raw results
         # If no matches were found, return the top 5 raw results
         if not ranked_places:
             logger.warning(f"No matches found via AI for {category}. Using top 5 raw results.")
             return places[:5]
         
         return ranked_places
+    
+    async def get_route_atractions(self, route_coordinates, preferences, max_distance=5000):
+        """
+        Find attractions along the route, not just at waypoints
+        :param route_coordinates: List of [lat, lng] coordinates along the route
+        :param preferences: List of place types to search for
+        :param max_distance: Maximum distance in meters from route to search for attractions
+        :return: Dictionary of attractions found along the route
+        """
+        logger.info(f"Searching for attractions along route with {len(route_coordinates)} points")
+
+        # Sample points along the route (every 10th point to avaoid too many API calls)
+        sampled_points = route_coordinates[::10]
+        logger.info(f"Sampling {len(sampled_points)} points along route")
+
+        route_attractions = []
+
+        for point in sampled_points:
+            lat, lng = point
+            
+            # Search for each preferred attraction type
+            for preference in preferences:
+                if preference not in VALID_PLACE_TYPES:
+                    logger.warning(f"Invalid place type: {preference}")
+                    continue
+
+                try:
+                    logger.info(f"Searching for {preference} near coordinates ({lat}, {lng})")
+                    places = self.gmaps.places_nearby(
+                        location=(lat, lng),
+                        type=VALID_PLACE_TYPES[preference],
+                        radius=max_distance
+                    )
+
+                    if places and 'results' in places:
+                        for place in places['results']:
+                            # Calculate distance from route point
+                            place_location = place['geometry']['location']
+                            distance = self._calculate_distance(
+                                (lat, lng),
+                                (place_location['lat'], place_location['lng'])
+                            )
+
+                            # Only include if within max_distance
+                            if distance <= max_distance:
+                                attraction = {
+                                    'name': place['name'],
+                                    'type': preference,
+                                    'location': place_location,
+                                    'rating': place.get('rating', 0),
+                                    'distance_from_route': distance,
+                                    'place_id': place.get('place_id')
+                                }
+                                route_attractions.append(attraction)
+                except Exception as e:
+                    logger.error(f"Error searching for {preference} near ({lat}, {lng}): {str(e)}")
+
+        # Sort attractions by rating and distance
+        route_attractions.sort(key=lambda x: (x['rating'], -x['distance_from_route']), reverse=True)
+
+        # Remove duplicates (same place_id)
+        seen_place_ids = set()
+        unique_attractions = []
+        for attraction in route_attractions:
+            if attraction['place_id'] not in seen_place_ids:
+                seen_place_ids.add(attraction['place_id'])
+                unique_attractions.append(attraction)
+
+        logger.info(f"Found {len(unique_attractions)} unique attractions along route")
+        return unique_attractions
+    
+    def _calculate_distance(self, point1, point2):
+        """
+        Calculate distance between two points using Haversine formula
+        :param point1:  Tuple of (lat, lng)
+        :param point2:  Tuple of (lat, lng)
+        :return Distance in meters
+        """
+        from math import radians, sin, cos, sqrt, atan2
+        
+        lat1, lng1 = point1
+        lat2, lng2 = point2
+        
+        R = 6371000 # Earth's radius in meters
+
+        lat1, lng1, lat2, lng2 = map(radians, [lat1, lng1, lat2, lng2])
+        dlat = lat2 - lat1
+        dlng = lng2 - lng1
+
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlng/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        distance = R * c
+
+        return distance

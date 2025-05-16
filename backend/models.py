@@ -24,7 +24,12 @@ class RouteRequest(BaseModel):
         description="Duration of each stop in minutes",
         example=[4, 12]
     )
-    attraction_preferences: Optional[List[str]]
+    attraction_preferences: Optional[List[str]] = Field(
+        default=["museum", "restaurant", "shopping_mall"],
+        title="Attraction Preferences",
+        description="Types of attractions to include in recommendations",
+        example=["museum", "restaurant", "shopping_mall", "park"]
+    )
 
 class DepartureTimeRequest(BaseModel):
     origin: str = Field(..., title="Origin", description="Starting point address", example="Katy, TX")

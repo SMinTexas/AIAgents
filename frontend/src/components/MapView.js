@@ -96,8 +96,6 @@ const MapView = ({ tripData }) => {
     const [markers, setMarkers] = useState([]);
     const [routeSegments, setRouteSegments] = useState([]);
     const [mapBounds, setMapBounds] = useState(null);
-    const [routeSegments, setRouteSegments] = useState([]);
-    const [mapBounds, setMapBounds] = useState(null);
 
     useEffect(() => {
         // Reset state when tripData changes
@@ -195,6 +193,26 @@ const MapView = ({ tripData }) => {
                 });
             }
 
+            // Add route attractions if available
+            if (tripData.route.route_attractions && Array.isArray(tripData.route.route_attractions)) {
+                console.log("Processing route attractions:", tripData.route.route_attractions);
+                
+                tripData.route.route_attractions.forEach(attraction => {
+                    if (attraction.location) {
+                        newMarkers.push({
+                            position: [attraction.location.lat, attraction.location.lng],
+                            type: "attraction",
+                            info: `
+                                <b>${attraction.name}</b><br>
+                                Type: ${attraction.type}<br>
+                                Rating: ${attraction.rating}<br>
+                                Distance from route: ${Math.round(attraction.distance_from_route)}m
+                            `
+                        });
+                    }
+                });
+            }
+
             // Add weather markers if available
             if (tripData.weather && typeof tripData.weather === 'object') {
                 console.log("Processing weather data:", tripData.weather);
@@ -202,29 +220,19 @@ const MapView = ({ tripData }) => {
                 // Convert weather object to array of entries
                 const weatherEntries = Object.entries(tripData.weather);
                 
-                weatherEntries.forEach(([location, weatherData], index) => {
-                    if (weatherData && weatherData.coords && 
-                        typeof weatherData.coords === 'object' && 
-                        'lat' in weatherData.coords && 
-                        'lng' in weatherData.coords) {
-                        
-                        const coords = [weatherData.coords.lat, weatherData.coords.lng];
-                        console.log(`Adding weather marker at ${coords} for ${location}`);
-                        
+                weatherEntries.forEach(([location, weather]) => {
+                    if (weather && weather.coords) {
                         newMarkers.push({
-                            position: coords,
+                            position: weather.coords,
                             type: "weather",
-                            info: `<b>Weather in ${location}:</b><br />
-                                <b>Condition:</b> ${weatherData.condition || "Unknown"}<br />
-                                <b>Temperature:</b> ${weatherData.temperature || "N/A"}<br />
-                                <b>Humidity:</b> ${weatherData.humidity || "N/A"}%`
+                            info: `
+                                <b>${location}</b><br>
+                                Temperature: ${weather.temperature}<br>
+                                Condition: ${weather.condition}
+                            `
                         });
-                    } else {
-                        console.warn(`Invalid weather data for ${location}:`, weatherData);
                     }
                 });
-            } else {
-                console.warn("No valid weather data available");
             }
 
             // Add traffic markers if available

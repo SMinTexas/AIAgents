@@ -222,7 +222,10 @@ const MapView = ({ tripData }) => {
                 
                 weatherEntries.forEach(([location, weather]) => {
                     if (weather && weather.coords) {
+                weatherEntries.forEach(([location, weather]) => {
+                    if (weather && weather.coords) {
                         newMarkers.push({
+                            position: weather.coords,
                             position: weather.coords,
                             type: "weather",
                             info: `

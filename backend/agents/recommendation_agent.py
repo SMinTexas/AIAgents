@@ -15,6 +15,7 @@ backend_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(backend_dir))
 
 from utils import cache_manager
+from utils import cache_manager
 import logging
 
 # Set up logging with a more concise format
@@ -24,6 +25,24 @@ logging.basicConfig(
     datefmt='%H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Valid Google Places API types
+VALID_PLACE_TYPES = {
+    'museum': 'museum',
+    'restaurant': 'restaurant',
+    'shopping_mall': 'shopping_mall',
+    'zoo': 'zoo',
+    'casino': 'casino',
+    'aquarium': 'aquarium',
+    'amusement_park': 'amusement_park',
+    'art_gallery': 'art_gallery',
+    'bowling_alley': 'bowling_alley',
+    'movie_theater': 'movie_theater',
+    'night_club': 'night_club',
+    'park': 'park',
+    'stadium': 'stadium',
+    'tourist_attraction': 'tourist_attraction'
+}
 
 # Valid Google Places API types
 VALID_PLACE_TYPES = {
@@ -75,16 +94,21 @@ class RecommendationAgent:
         """Get recommendations for each location based on preferences"""
         logger.info(f"Getting recommendations for locations: {locations}")
         logger.info(f"With preferences: {preferences}")
+        logger.info(f"Getting recommendations for locations: {locations}")
+        logger.info(f"With preferences: {preferences}")
         
         recommendations = {}
         
         for location in locations:
             logger.info(f"Processing location: {location}")
+            logger.info(f"Processing location: {location}")
             try:
                 # Get coordinates for the location
                 logger.info(f"Geocoding location: {location}")
+                logger.info(f"Geocoding location: {location}")
                 geocode_result = self.gmaps.geocode(location)
                 if not geocode_result:
+                    logger.warning(f"Could not geocode location: {location}")
                     logger.warning(f"Could not geocode location: {location}")
                     continue
                 
@@ -92,6 +116,7 @@ class RecommendationAgent:
                 lat = location_data['geometry']['location']['lat']
                 lng = location_data['geometry']['location']['lng']
                 
+                logger.info(f"Coordinates for {location}: {lat}, {lng}")
                 logger.info(f"Coordinates for {location}: {lat}, {lng}")
                 
                 # Initialize recommendations for this location
@@ -169,6 +194,7 @@ class RecommendationAgent:
                     logger.error(f"Response body: {e.response.text}")
                 continue
         
+        logger.info(f"Final recommendations structure: {recommendations}")
         logger.info(f"Final recommendations structure: {recommendations}")
         return recommendations
 

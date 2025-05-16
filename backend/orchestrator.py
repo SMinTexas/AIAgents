@@ -21,6 +21,7 @@ async def plan_trip(request: RouteRequest):
     """ AI-powered trip planner that integrates route, weather, and recommendations """
     try:
         logger.info(f"Received trip planning request: {request}")
+        logger.info(f"Received trip planning request: {request}")
         start_time = time.time()
 
         waypoints_list = request.waypoints
@@ -29,15 +30,19 @@ async def plan_trip(request: RouteRequest):
 
         # Fetch optimized route
         logger.info(f"Fetching route from {request.origin} to {request.destination}")
+        logger.info(f"Fetching route from {request.origin} to {request.destination}")
         route_info = travel_agent.get_route(request.origin, request.destination, request.waypoints)
+        logger.info(f"Route info received: {route_info}")
         logger.info(f"Route info received: {route_info}")
 
         if "polyline" in route_info:
             decoded_coordinates = polyline.decode(route_info["polyline"])
             decoded_coordinates = [list(coord) for coord in decoded_coordinates]
             logger.info(f"Decoded {len(decoded_coordinates)} coordinates from polyline")
+            logger.info(f"Decoded {len(decoded_coordinates)} coordinates from polyline")
         else:
             decoded_coordinates = []
+            logger.warning("No polyline found in route response")
             logger.warning("No polyline found in route response")
 
         route_info["coordinates"] = decoded_coordinates
@@ -81,6 +86,7 @@ async def plan_trip(request: RouteRequest):
             "recommendations": recommendations
         }
 
+        logger.info(f"Trip planning completed in {time.time() - start_time:.2f} seconds")
         logger.info(f"Trip planning completed in {time.time() - start_time:.2f} seconds")
         return response_data
     

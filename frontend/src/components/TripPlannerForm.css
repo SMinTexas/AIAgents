@@ -36,6 +36,39 @@
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
+.page-header {
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+}
+
 .form-section {
     margin-bottom: 2rem;
     padding: 1.5rem;
@@ -49,6 +82,9 @@
     color: #2c3e50;
     font-weight: 600;
     font-size: 1.2rem;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.2rem;
 }
 
 .waypoint-group {
@@ -57,7 +93,14 @@
     align-items: stretch;
     margin-bottom: 1.5rem;
     background-color: #fff;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    margin-bottom: 1.5rem;
+    background-color: #fff;
     border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
     overflow: hidden;
     border: 1px solid #e9ecef;
 }
@@ -66,6 +109,19 @@
 .duration-input-group {
     display: flex;
     flex-direction: column;
+    justify-content: stretch;
+    flex: 1 1 0;
+    padding: 0.5rem 1rem;
+    background-color: white;
+}
+
+.waypoint-input-group {
+    border-right: 1px solid #e9ecef;
+}
+
+.duration-input-group {
+    border-right: 1px solid #e9ecef;
+    max-width: 180px;
     justify-content: stretch;
     flex: 1 1 0;
     padding: 0.5rem 1rem;
@@ -90,9 +146,12 @@
 .waypoint-input-group input,
 .duration-input-group input {
     padding: 0.75rem;
+    padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
     width: 100%;
     box-sizing: border-box;
 }
@@ -122,6 +181,7 @@
 
 .add-waypoint-btn {
     padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem;
     background-color: #28a745;
     color: white;
     border: none;
@@ -129,6 +189,10 @@
     cursor: pointer;
     font-size: 1rem;
     margin-top: 1rem;
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
     width: 300px;
     margin-left: auto;
     margin-right: auto;
@@ -144,6 +208,9 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
     margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
     padding: 1rem;
     background-color: #f8f9fa;
     border-radius: 4px;
@@ -166,7 +233,14 @@
 }
 
 .submit-button {
+.preference-checkbox label {
+    font-weight: normal;
+    color: #333;
+}
+
+.submit-button {
     width: 100%;
+    max-width: 300px;
     max-width: 300px;
     padding: 1rem;
     background-color: #007bff;
@@ -178,8 +252,12 @@
     margin: 2rem auto;
     display: block;
     transition: background-color 0.2s;
+    margin: 2rem auto;
+    display: block;
+    transition: background-color 0.2s;
 }
 
+.submit-button:hover {
 .submit-button:hover {
     background-color: #0056b3;
 }

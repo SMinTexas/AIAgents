@@ -11,7 +11,6 @@
     text-align: center;
 }
 
-
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -19,15 +18,18 @@
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #333;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
 }
 
 .form-group input {
-    width: 97%;
+    width: 100%;
     padding: 0.75rem;
     font-size: 1rem;
     border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
 }
 
 .form-group input:focus {
@@ -54,10 +56,10 @@
 .waypoint-group {
     display: grid;
     grid-template-columns: 2fr 1fr auto;
-    gap: 0;
+    gap: 1px;
     align-items: stretch;
     margin-bottom: 1.5rem;
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     border-radius: 4px;
     overflow: hidden;
 }
@@ -69,8 +71,15 @@
     gap: 0.5rem;
     padding: 1rem;
     background-color: white;
-    border-right: 1px solid #e9ecef;
     height: 100%;
+}
+
+.waypoint-input-group {
+    border-right: 1px solid #e9ecef;
+}
+
+.duration-input-group {
+    border-right: 1px solid #e9ecef;
 }
 
 .waypoint-input-group:last-child,
@@ -104,7 +113,8 @@
     min-width: 80px;
     height: 42px;
     align-self: flex-end;
-    margin: 0 1rem;
+    margin: 0;
+    border-radius: 0;
 }
 
 .remove-waypoint-btn:hover {
@@ -185,7 +195,7 @@
     align-items: center;
     justify-content: center;
     margin: 1rem 0;
-    color: #666;
+    color: #393636;
 }
 
 .loading-spinner {

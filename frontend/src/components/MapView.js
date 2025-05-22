@@ -119,7 +119,8 @@ const MapView = ({ tripData }) => {
                 .filter(coord => Array.isArray(coord) && coord.length >= 2)
                 .map(coord => [coord[0], coord[1]]);
 
-            if (routeCoordinates.length === 0) {
+            if (routeCoordinates.length === 0) 
+            {
                 console.warn("No valid route coordinates after filtering");
                 return;
             }
@@ -157,7 +158,8 @@ const MapView = ({ tripData }) => {
             ];
 
             // Add waypoint markers if available
-            if (tripData.route.waypoints && Array.isArray(tripData.route.waypoints) && tripData.route.waypoints.length > 0) {
+            if (tripData.route.waypoints && Array.isArray(tripData.route.waypoints) && tripData.route.waypoints.length > 0) 
+            {
                 console.log("Processing waypoints:", tripData.route.waypoints);
                 
                 // Get the legs from the route data
@@ -165,8 +167,10 @@ const MapView = ({ tripData }) => {
                 console.log("Route legs:", legs);
                 
                 // Add markers for each waypoint
-                legs.forEach((leg, index) => {
-                    if (index < legs.length - 1) { // Skip the last leg (destination)
+                legs.forEach((leg, index) => 
+                {
+                    if (index < legs.length - 1) 
+                    { // Skip the last leg (destination)
                         // Use the end address of each leg as a waypoint
                         const waypointAddress = leg.end_address;
                         console.log(`Processing leg ${index} with end address: ${waypointAddress}`);
@@ -179,14 +183,17 @@ const MapView = ({ tripData }) => {
                             return i > 0 && i < routeCoordinates.length - 1;
                         });
                         
-                        if (waypointCoords) {
+                        if (waypointCoords) 
+                        {
                             console.log(`Adding waypoint marker at ${waypointCoords} for ${waypointAddress}`);
                             newMarkers.push({
                                 position: waypointCoords,
                                 type: "waypoint",
                                 info: `<b>Waypoint:</b> ${waypointAddress}`
                             });
-                        } else {
+                        } 
+                        else 
+                        {
                             console.warn(`Could not find coordinates for waypoint: ${waypointAddress}`);
                         }
                     }
@@ -194,11 +201,14 @@ const MapView = ({ tripData }) => {
             }
 
             // Add route attractions if available
-            if (tripData.route.route_attractions && Array.isArray(tripData.route.route_attractions)) {
+            if (tripData.route.route_attractions && Array.isArray(tripData.route.route_attractions)) 
+            {
                 console.log("Processing route attractions:", tripData.route.route_attractions);
                 
-                tripData.route.route_attractions.forEach(attraction => {
-                    if (attraction.location) {
+                tripData.route.route_attractions.forEach(attraction => 
+                    {
+                    if (attraction.location) 
+                    {
                         newMarkers.push({
                             position: [attraction.location.lat, attraction.location.lng],
                             type: "attraction",
@@ -214,16 +224,21 @@ const MapView = ({ tripData }) => {
             }
 
             // Add weather markers if available
-            if (tripData.weather && typeof tripData.weather === 'object') {
+            if (tripData.weather && typeof tripData.weather === 'object') 
+            {
                 console.log("Processing weather data:", tripData.weather);
                 
                 // Convert weather object to array of entries
                 const weatherEntries = Object.entries(tripData.weather);
                 
-                weatherEntries.forEach(([location, weather]) => {
-                    if (weather && weather.coords) {
-                weatherEntries.forEach(([location, weather]) => {
-                    if (weather && weather.coords) {
+                // weatherEntries.forEach(([location, weather]) => 
+                // {
+                //     if (weather && weather.coords) 
+                //     {
+                weatherEntries.forEach(([location, weather]) => 
+                {
+                    if (weather && weather.coords) 
+                    {
                         newMarkers.push({
                             position: weather.coords,
                             position: weather.coords,
@@ -239,11 +254,14 @@ const MapView = ({ tripData }) => {
             }
 
             // Add traffic markers if available
-            if (tripData.traffic && tripData.traffic.incidents && Array.isArray(tripData.traffic.incidents)) {
+            if (tripData.traffic && tripData.traffic.incidents && Array.isArray(tripData.traffic.incidents)) 
+            {
                 console.log("Processing traffic incidents:", tripData.traffic.incidents);
                 
-                tripData.traffic.incidents.forEach((incident, index) => {
-                    if (incident && incident.coords && Array.isArray(incident.coords) && incident.coords.length >= 2) {
+                tripData.traffic.incidents.forEach((incident, index) => 
+                {
+                    if (incident && incident.coords && Array.isArray(incident.coords) && incident.coords.length >= 2) 
+                    {
                         console.log(`Adding traffic incident marker at ${incident.coords}`);
                         
                         newMarkers.push({
@@ -258,20 +276,25 @@ const MapView = ({ tripData }) => {
             }
 
             // Add recommendation markers if available
-            if (tripData.recommendations && typeof tripData.recommendations === 'object') {
+            if (tripData.recommendations && typeof tripData.recommendations === 'object') 
+            {
                 console.log("Processing recommendations:", tripData.recommendations);
                 
                 // Process each location's recommendations
-                Object.entries(tripData.recommendations).forEach(([location, locationData]) => {
+                Object.entries(tripData.recommendations).forEach(([location, locationData]) => 
+                {
                     console.log(`Processing recommendations for ${location}:`, locationData);
                     
                     // Process hotels (limit to 5)
-                    if (locationData.hotels && Array.isArray(locationData.hotels)) {
+                    if (locationData.hotels && Array.isArray(locationData.hotels)) 
+                    {
                         const hotels = locationData.hotels.slice(0, 5);
                         console.log(`Adding ${hotels.length} hotel markers for ${location}`);
                         
-                        hotels.forEach((hotel, index) => {
-                            if (hotel && hotel.geometry && hotel.geometry.location) {
+                        hotels.forEach((hotel, index) => 
+                        {
+                            if (hotel && hotel.geometry && hotel.geometry.location) 
+                            {
                                 const coords = [hotel.geometry.location.lat, hotel.geometry.location.lng];
                                 console.log(`Adding hotel marker at ${coords} for ${hotel.name}`);
                                 
@@ -287,12 +310,15 @@ const MapView = ({ tripData }) => {
                     }
                     
                     // Process restaurants (limit to 5)
-                    if (locationData.restaurants && Array.isArray(locationData.restaurants)) {
+                    if (locationData.restaurants && Array.isArray(locationData.restaurants)) 
+                    {
                         const restaurants = locationData.restaurants.slice(0, 5);
                         console.log(`Adding ${restaurants.length} restaurant markers for ${location}`);
                         
-                        restaurants.forEach((restaurant, index) => {
-                            if (restaurant && restaurant.geometry && restaurant.geometry.location) {
+                        restaurants.forEach((restaurant, index) => 
+                        {
+                            if (restaurant && restaurant.geometry && restaurant.geometry.location) 
+                            {
                                 const coords = [restaurant.geometry.location.lat, restaurant.geometry.location.lng];
                                 console.log(`Adding restaurant marker at ${coords} for ${restaurant.name}`);
                                 
@@ -308,12 +334,14 @@ const MapView = ({ tripData }) => {
                     }
                     
                     // Process attractions (limit to 5)
-                    if (locationData.attractions && Array.isArray(locationData.attractions)) {
+                    if (locationData.attractions && Array.isArray(locationData.attractions)) 
+                    {
                         const attractions = locationData.attractions.slice(0, 5);
                         console.log(`Adding ${attractions.length} attraction markers for ${location}`);
                         
                         attractions.forEach((attraction, index) => {
-                            if (attraction && attraction.geometry && attraction.geometry.location) {
+                            if (attraction && attraction.geometry && attraction.geometry.location) 
+                            {
                                 const coords = [attraction.geometry.location.lat, attraction.geometry.location.lng];
                                 console.log(`Adding attraction marker at ${coords} for ${attraction.name}`);
                                 
@@ -328,26 +356,33 @@ const MapView = ({ tripData }) => {
                         });
                     }
                 });
-            } else {
+            } else 
+            {
                 console.warn("No valid recommendations data available");
             }
 
             // Create route segments based on traffic data if available
-            if (tripData.traffic && tripData.traffic.segments && tripData.traffic.segments.length > 0) {
+            if (tripData.traffic && tripData.traffic.segments && tripData.traffic.segments.length > 0) 
+            {
                 console.log("Processing traffic segments:", tripData.traffic.segments);
                 
                 const segments = [];
                 
                 // Process each traffic segment
-                tripData.traffic.segments.forEach((segment, index) => {
-                    if (segment && segment.coordinates && Array.isArray(segment.coordinates) && segment.coordinates.length > 0) {
+                tripData.traffic.segments.forEach((segment, index) => 
+                {
+                    if (segment && segment.coordinates && Array.isArray(segment.coordinates) && segment.coordinates.length > 0) 
+                    {
                         // Determine color based on congestion level
                         let color = "#4CAF50"; // Default green
-                        if (segment.congestion_level === "moderate") {
+                        if (segment.congestion_level === "moderate") 
+                        {
                             color = "#FFC107"; // Yellow
-                        } else if (segment.congestion_level === "heavy") {
+                        } else if (segment.congestion_level === "heavy") 
+                        {
                             color = "#F44336"; // Red
-                        } else if (segment.congestion_level === "unknown") {
+                        } else if (segment.congestion_level === "unknown") 
+                        {
                             color = "#9E9E9E"; // Grey
                         }
                         
@@ -359,16 +394,20 @@ const MapView = ({ tripData }) => {
                 });
                 
                 // If we have segments, use them
-                if (segments.length > 0) {
+                if (segments.length > 0) 
+                {
                     setRouteSegments(segments);
-                } else {
+                } else 
+                {
                     // Fallback to a single segment for the entire route
                     setRouteSegments([{
                         positions: routeCoordinates,
                         color: "#4CAF50" // Green color for the route
                     }]);
                 }
-            } else {
+            } 
+            else 
+            {
                 // Create a single route segment for the entire route
                 setRouteSegments([{
                     positions: routeCoordinates,
@@ -378,7 +417,9 @@ const MapView = ({ tripData }) => {
 
             console.log("Setting markers:", newMarkers);
             setMarkers(newMarkers);
-        } catch (error) {
+        } 
+        catch (error) 
+        {
             console.error("Error processing route coordinates:", error);
         }
     }, [tripData]);

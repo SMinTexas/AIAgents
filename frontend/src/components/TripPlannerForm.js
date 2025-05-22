@@ -2,22 +2,26 @@ import React, { useState } from 'react';
 import './TripPlannerForm.css';
 
 const ATTRACTION_TYPES = [
-    { id: 'museum', label: 'Museum' },
-    { id: 'tourist_attraction', label: 'Tourist Attraction' },
-    { id: 'shopping_mall', label: 'Shopping Mall' },
-    { id: 'zoo', label: 'Zoo' },
-    { id: 'casino', label: 'Casino' },
-    { id: 'aquarium', label: 'Aquarium' },
     { id: 'amusement_park', label: 'Amusement Park' },
+    { id: 'aquarium', label: 'Aquarium' },
     { id: 'art_gallery', label: 'Art Gallery' },
-    { id: 'bowling_alley', label: 'Bowling Alley' },
+    { id: 'beach', label: 'Beach'},
+    { id: 'casino', label: 'Casino' },
+    { id: 'cultural_landmark', label: 'Cultural Landmark'},
+    { id: 'electric_vehicle_charging_station', label: 'Charging Station'},
+    { id: 'gas_station', label: 'Gas Station'},
+    { id: 'historical_landmark', label: 'Historical Landmark'},
+    { id: 'lodging', label: 'Hotel' },
     { id: 'movie_theater', label: 'Movie Theater' },
+    { id: 'museum', label: 'Museum' },
     { id: 'night_club', label: 'Night Club' },
     { id: 'park', label: 'Park' },
+    { id: 'rest_stop', label: 'Rest Stop'},
+    { id: 'restaurant', label: 'Restaurant' },
     { id: 'stadium', label: 'Stadium' },
     { id: 'theme_park', label: 'Theme Park' },
-    { id: 'restaurant', label: 'Restaurant' },
-    { id: 'lodging', label: 'Hotel' }
+    { id: 'tourist_attraction', label: 'Tourist Attraction' },
+    { id: 'zoo', label: 'Zoo' }
 ];
 
 const TripPlannerForm = ({ onSubmit }) => {
@@ -30,19 +34,22 @@ const TripPlannerForm = ({ onSubmit }) => {
         attractionPreferences: ['museum', 'restaurant', 'shopping']
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
 
-    const handleInputChange = (e, index) => {
+    const handleInputChange = (e, index) => 
+    {
         const { name, value } = e.target;
 
-        if (name === 'waypoints' || name === 'stopDurations') {
+        if (name === 'waypoints' || name === 'stopDurations') 
+        {
             const newValues = [...formData[name]];
             newValues[index] = value;
             setFormData(prev => ({
                 ...prev,
                 [name]: newValues
             }));
-        } else {
+        } 
+        else 
+        {
             setFormData(prev => ({
                 ...prev,
                 [name]: value
@@ -67,10 +74,10 @@ const TripPlannerForm = ({ onSubmit }) => {
     };
 
     const handleSubmit = async (e) => {
-    const handleSubmit = async (e) => {
         e.preventDefault();
         
-        try {
+        try 
+        {
             setIsLoading(true);
             setIsLoading(true);
             // Convert stopDurations to numbers
@@ -82,22 +89,24 @@ const TripPlannerForm = ({ onSubmit }) => {
             const waypoints = formData.waypoints.filter(wp => wp && wp.trim() !== '');
 
             await onSubmit({
-            await onSubmit({
                 ...formData,
                 waypoints,
                 stopDurations,
                 attractionPreferences: formData.attractionPreferences || []
             });
-        } catch (error) {
+        } 
+        catch (error) 
+        {
             console.error('Error in form submission:', error);
-        } finally {
-            setIsLoading(false);
-        } finally {
+        } 
+        finally 
+        {
             setIsLoading(false);
         }
     };
 
-    const handlePreferenceChange = (pref, checked) => {
+    const handlePreferenceChange = (pref, checked) => 
+    {
         const newPreferences = checked
             ? [...(formData.attractionPreferences || []), pref]
             : (formData.attractionPreferences || []).filter(p => p !== pref);
@@ -108,7 +117,8 @@ const TripPlannerForm = ({ onSubmit }) => {
     };
 
     // Helper function to capitalize first letter
-    const capitalizeFirstLetter = (str) => {
+    const capitalizeFirstLetter = (str) => 
+    {
         if (!str || typeof str !== 'string') return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
     };

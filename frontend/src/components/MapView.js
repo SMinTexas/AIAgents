@@ -90,17 +90,17 @@ const markerIcons = {
 
 // Google Place Icon URLs and background colors for categories
 const PLACE_TYPE_ICON_INFO = {
+    attraction: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/historic_pinlet.svg",
+        color: "#26C6DA"
+    },
+    hotel: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/hotel_pinlet.svg",
+        color: "#29B6F6"
+    },
     restaurant: {
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/restaurant_pinlet.svg",
         color: "#FF7043"
-    },
-    shopping_mall: {
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/shopping_pinlet.svg",
-        color: "#AB47BC"
-    },
-    lodging: {
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/lodging_pinlet.svg",
-        color: "#29B6F6"
     },
     museum: {
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/museum_pinlet.svg",
@@ -141,6 +141,10 @@ const PLACE_TYPE_ICON_INFO = {
     night_club: { 
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#D4E157"
+    },
+    shopping_mall: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/shopping_pinlet.svg",
+        color: "#AB47BC"
     },
     tourist_attraction: { 
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
@@ -291,7 +295,7 @@ const MapView = ({ tripData }) => {
                     {
                         newMarkers.push({
                             position: [attraction.location.lat, attraction.location.lng],
-                            type: "attraction",
+                            type: attraction.type || "attraction",
                             info: `
                                 <b>${attraction.name}</b><br>
                                 Type: ${attraction.type}<br>

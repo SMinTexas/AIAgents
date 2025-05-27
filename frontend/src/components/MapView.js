@@ -88,6 +88,86 @@ const markerIcons = {
     })
 };
 
+// Google Place Icon URLs and background colors for categories
+const PLACE_TYPE_ICON_INFO = {
+    restaurant: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/restaurant_pinlet.svg",
+        color: "#FF7043"
+    },
+    shopping_mall: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/shopping_pinlet.svg",
+        color: "#AB47BC"
+    },
+    lodging: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/lodging_pinlet.svg",
+        color: "#29B6F6"
+    },
+    museum: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/museum_pinlet.svg",
+        color: "#8D6E63"
+    },
+    park: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/park_pinlet.svg",
+        color: "#66BB6A"
+    },
+    stadium: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/stadium_pinlet.svg",
+        color: "#FFA726"
+    },
+    zoo: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/zoo_pinlet.svg",
+        color: "#26A69A"
+    },
+    aquarium: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/aquarium_pinlet.svg",
+        color: "#42A5F5"
+    },
+    casino: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/casino_pinlet.svg",
+        color: "#EC407A"
+    },
+    art_gallery: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/art_gallery_pinlet.svg",
+        color: "#7E57C2"
+    },
+    bowling_alley: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/bowling_alley_pinlet.svg",
+        color: "#FFB300"
+    },
+    movie_theater: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/movie_theater_pinlet.svg",
+        color: "#78909C"
+    },
+    night_club: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/night_club_pinlet.svg",
+        color: "#D4E157"
+    },
+    tourist_attraction: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/tourist_attraction_pinlet.svg",
+        color: "#26C6DA"
+    },
+    default: {
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
+        color: "#BDBDBD"
+    }
+};
+
+// Helper to get icon info for a place type
+const getPlaceIconInfo = (type) => {
+    return PLACE_TYPE_ICON_INFO[type] || PLACE_TYPE_ICON_INFO.default;
+};
+
+// Helper to create a Leaflet divIcon with a Google icon and background color
+const createPlaceDivIcon = (type) => {
+    const { icon, color } = getPlaceIconInfo(type);
+    return L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white;"><img src='${icon}' style='width: 20px; height: 20px; display: block; margin: auto;'/></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
+};
+
 const MapView = ({ tripData }) => {
     // Default center coordinates (will be updated when route data is available)
     const defaultCenter = [39.8283, -98.5795]; // Center of USA
@@ -222,10 +302,7 @@ const MapView = ({ tripData }) => {
                 
                 weatherEntries.forEach(([location, weather]) => {
                     if (weather && weather.coords) {
-                weatherEntries.forEach(([location, weather]) => {
-                    if (weather && weather.coords) {
                         newMarkers.push({
-                            position: weather.coords,
                             position: weather.coords,
                             type: "weather",
                             info: `
@@ -385,6 +462,11 @@ const MapView = ({ tripData }) => {
 
     // Function to get the appropriate icon based on marker type
     const getMarkerIcon = (type) => {
+        // Use Google Place icons for known place types
+        if (PLACE_TYPE_ICON_INFO[type]) {
+            return createPlaceDivIcon(type);
+        }
+        // Fallback to previous icons for origin, destination, etc.
         switch (type) {
             case "origin":
                 return markerIcons.origin;
@@ -396,14 +478,8 @@ const MapView = ({ tripData }) => {
                 return markerIcons.weather;
             case "traffic":
                 return markerIcons.traffic;
-            case "hotel":
-                return markerIcons.museum;
-            case "restaurant":
-                return markerIcons.shopping;
-            case "attraction":
-                return markerIcons.tourist_attraction;
             default:
-                return markerIcons.tourist_attraction;
+                return createPlaceDivIcon("default");
         }
     };
 

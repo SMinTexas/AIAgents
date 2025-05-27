@@ -106,44 +106,44 @@ const PLACE_TYPE_ICON_INFO = {
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/museum_pinlet.svg",
         color: "#8D6E63"
     },
-    park: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/park_pinlet.svg",
+    park: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#66BB6A"
     },
     stadium: {
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/stadium_pinlet.svg",
         color: "#FFA726"
     },
-    zoo: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/zoo_pinlet.svg",
+    zoo: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#26A69A"
     },
-    aquarium: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/aquarium_pinlet.svg",
+    aquarium: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#42A5F5"
     },
-    casino: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/casino_pinlet.svg",
+    casino: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#EC407A"
     },
-    art_gallery: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/art_gallery_pinlet.svg",
+    art_gallery: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#7E57C2"
     },
-    bowling_alley: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/bowling_alley_pinlet.svg",
+    bowling_alley: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#FFB300"
     },
     movie_theater: {
         icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/movie_pinlet.svg",
         color: "#78909C"
     },
-    night_club: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/night_club_pinlet.svg",
+    night_club: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#D4E157"
     },
-    tourist_attraction: { //incorrect address
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/tourist_attraction_pinlet.svg",
+    tourist_attraction: { 
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet.svg",
         color: "#26C6DA"
     },
     default: {

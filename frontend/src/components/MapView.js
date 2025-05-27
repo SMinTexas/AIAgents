@@ -99,7 +99,7 @@ const PLACE_TYPE_ICON_INFO = {
         color: "#AB47BC"
     },
     lodging: {
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/hotel_pinlet.svg",
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/lodging_pinlet.svg",
         color: "#29B6F6"
     },
     museum: {
@@ -135,7 +135,7 @@ const PLACE_TYPE_ICON_INFO = {
         color: "#FFB300"
     },
     movie_theater: {
-        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/movie_pinlet.svg",
+        icon: "https://maps.gstatic.com/mapfiles/place_api/icons/v2/movie_theater_pinlet.svg",
         color: "#78909C"
     },
     night_club: { 
@@ -157,16 +157,16 @@ const getPlaceIconInfo = (type) => {
     return PLACE_TYPE_ICON_INFO[type] || PLACE_TYPE_ICON_INFO.default;
 };
 
-// Helper to create a leaflet divIcon with a Google icon and background color
+// Helper to create a Leaflet divIcon with a Google icon and background color
 const createPlaceDivIcon = (type) => {
     const { icon, color } = getPlaceIconInfo(type);
     return L.divIcon({
         className: 'custom-div-icon',
-        html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white:"><img src='${icon} style='width: 20px; height: 20px; display: block' margin: auto;'/></div>`,
+        html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white;"><img src='${icon}' style='width: 20px; height: 20px; display: block; margin: auto;'/></div>`,
         iconSize: [32, 32],
         iconAnchor: [16, 16]
     });
-}
+};
 
 const MapView = ({ tripData }) => {
     // Default center coordinates (will be updated when route data is available)
@@ -311,16 +311,9 @@ const MapView = ({ tripData }) => {
                 // Convert weather object to array of entries
                 const weatherEntries = Object.entries(tripData.weather);
                 
-                // weatherEntries.forEach(([location, weather]) => 
-                // {
-                //     if (weather && weather.coords) 
-                //     {
-                weatherEntries.forEach(([location, weather]) => 
-                {
-                    if (weather && weather.coords) 
-                    {
+                weatherEntries.forEach(([location, weather]) => {
+                    if (weather && weather.coords) {
                         newMarkers.push({
-                            position: weather.coords,
                             position: weather.coords,
                             type: "weather",
                             info: `
@@ -506,11 +499,10 @@ const MapView = ({ tripData }) => {
 
     // Function to get the appropriate icon based on marker type
     const getMarkerIcon = (type) => {
-        // Use Google Place Icons for known place types
+        // Use Google Place icons for known place types
         if (PLACE_TYPE_ICON_INFO[type]) {
             return createPlaceDivIcon(type);
         }
-
         // Fallback to previous icons for origin, destination, etc.
         switch (type) {
             case "origin":

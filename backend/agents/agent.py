@@ -3,14 +3,17 @@ import googlemaps
 import folium
 import polyline
 import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TravelAgent:
     def __init__(self):
         self.api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-        print(f"\nInitializing TravelAgent")
-        print(f"API Key present: {bool(self.api_key)}")
-        print(f"API Key length: {len(self.api_key) if self.api_key else 0}")
-        print(f"API Key first 10 chars: {self.api_key[:10] if self.api_key else 'None'}")
+        logger.info(f"Initializing TravelAgent")
+        logger.info(f"API Key present: {bool(self.api_key)}")
+        logger.info(f"API Key length: {len(self.api_key) if self.api_key else 0}")
+        logger.info(f"API Key first 10 characters: {self.api_key[:10] if self.api_key else 'None'}")
         
         if not self.api_key:
             raise ValueError("Google Maps API key not found. This should have been caught during startup.")
@@ -21,8 +24,8 @@ class TravelAgent:
     def get_route(self, origin, destination, waypoints=[]):
         """ Fetch optimized route and return travel time in hours and minutes. """
         try:   
-            print(f"\nFetching route from {origin} to {destination}")
-            print(f"Waypoints: {waypoints}")
+            logger.info(f"Fetching route from {origin} to {destination}")
+            logger.info(f"Waypoints: {waypoints}")
             
             # Build the request parameters
             params = {
@@ -35,25 +38,25 @@ class TravelAgent:
             # Only add waypoints if they exist
             if waypoints and len(waypoints) > 0:
                 params["waypoints"] = waypoints
-                print(f"Added waypoints to request: {waypoints}")
+                logger.info(f"Added waypoints to request: {waypoints}")
 
-            print(f"Google Maps API request params: {params}")
+            logger.info(f"Google Maps API request params: {params}")
 
             try:
                 # Call Google Directions API
                 route_result = self.gmaps.directions(**params)
             except Exception as api_error:
-                print(f"Google Maps API Error: {str(api_error)}")
-                print(f"Error type: {type(api_error)}")
+                logger.error(f"Google Maps API Error: {str(api_error)}")
+                logger.error(f"Error type: {type(api_error)}")
                 if hasattr(api_error, 'response'):
-                    print(f"API Response: {api_error.response}")
+                    logger.info(f"API Response: {api_error.response}")
                 return {"error": f"Google Maps API Error: {str(api_error)}"}
 
             if not route_result:
-                print(f"No routes found for {origin} to {destination}")
+                logger.info(f"No routes found for {origin} to {destination}")
                 return {"error": "No route data available."}
 
-            print(f"Route result received: {len(route_result)} routes found")
+            logger.info(f"Route result received: {len(route_result)} routes found")
 
             # Initialize total values
             total_distance_meters = 0
@@ -96,12 +99,12 @@ class TravelAgent:
                     if 'end_location' in last_leg:
                         destination_coords = [last_leg['end_location']['lat'], last_leg['end_location']['lng']]
 
-                # print(f"Route processed successfully:")
-                # print(f"- Total distance: {total_distance_miles:.2f} miles")
-                # print(f"- Total duration: {total_duration_hours:.2f} hours")
-                # print(f"- Number of waypoints: {len(extracted_waypoints)}")
-                # print(f"- Has polyline: {bool(polyline_points)}")
-                # print(f"- Has destination coords: {bool(destination_coords)}")
+                logger.info(f"Route processed successfully:")
+                logger.info(f"- Total distance: {total_distance_miles:.2f} miles")
+                logger.info(f"- Total duration: {total_duration_hours:.2f} hours")
+                logger.info(f"- Number of waypoints: {len(extracted_waypoints)}")
+                logger.info(f"- Has polyline: {bool(polyline_points)}")
+                logger.info(f"- Has destination coords: {bool(destination_coords)}")
 
                 return {
                     "total_distance_miles": round(total_distance_miles, 2),
@@ -114,13 +117,13 @@ class TravelAgent:
                     "destination_coords": destination_coords
                 }
             except KeyError as e:
-                print(f"Error processing route data: {str(e)}")
-                print(f"Route result structure: {route_result}")
+                logger.error(f"Error processing route data: {str(e)}")
+                logger.error(f"Route result structure: {route_result}")
                 return {"error": f"Error processing route data: {str(e)}"}
         
         except Exception as e:
-            print(f"Error in get_route: {str(e)}")
-            print(f"Request parameters: origin={origin}, destination={destination}, waypoints={waypoints}")
+            logger.error(f"Error in get_route: {str(e)}")
+            logger.error(f"Request parameters: origin={origin}, destination={destination}, waypoints={waypoints}")
             return {"error": f"An error occurred while fetching the route: {str(e)}"}
     
     def get_real_time_traffic(self, origin, destination, waypoints=[]):

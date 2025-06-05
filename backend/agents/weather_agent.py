@@ -34,16 +34,16 @@ class WeatherAgent:
             # Add state/country to the address if not present
             if "katy" in address.lower() and "texas" not in address.lower():
                 address = f"{address}, Texas, USA"
-            
-            # print(f"Geocoding address: {address}")
+
+            logger(f"Geocoding address: {address}")
             geocode_result = self.gmaps.geocode(address)
             
             if geocode_result:
                 location = geocode_result[0]['geometry']['location']
                 formatted_address = geocode_result[0]['formatted_address']
-                # print(f"Geocoding result for {address}:")
-                # print(f"- Formatted address: {formatted_address}")
-                # print(f"- Location: {location}")
+                logger.info(f"Geocoding result for {address}:")
+                logger.info(f"- Formatted address: {formatted_address}")
+                logger.info(f"- Location: {location}")
                 return f"{location['lat']},{location['lng']}"
             return None
         except Exception as e:
@@ -62,7 +62,7 @@ class WeatherAgent:
             return {"error": "No waypoints provided for weather lookup"}
 
         stops = route_info.get("waypoints", [])
-        # logger.info(f"Processing weather for stops: {stops}")
+        logger.info(f"Processing weather for stops: {stops}")
 
         # Add both origin and destination if they're not already included
         if "legs" in route_info:
@@ -74,7 +74,7 @@ class WeatherAgent:
                     origin = first_leg["start_address"]
                     if origin not in stops:
                         stops.insert(0, origin)
-                        # logger.info(f"Added origin to stops: {origin}")
+                        logger.info(f"Added origin to stops: {origin}")
 
                 # Add destination from last leg
                 last_leg = legs[-1]
@@ -82,11 +82,11 @@ class WeatherAgent:
                     destination = last_leg["end_address"]
                     if destination not in stops:
                         stops.append(destination)
-                        # logger.info(f"Added destination to stops: {destination}")
+                        logger.info(f"Added destination to stops: {destination}")
 
         # Ensure we have at least one stop to process
         if not stops:
-            # logger.error("No stops provided for weather lookup")
+            logger.error("No stops provided for weather lookup")
             return {"error": "No stops provided for weather lookup"}
 
         for waypoint in stops:
@@ -94,20 +94,20 @@ class WeatherAgent:
                 # First get the coordinates using Google Maps
                 coords = await self._get_lat_lng(waypoint)
                 if not coords:
-                    # logger.error(f"Could not get coordinates for {waypoint}")
+                    logger.error(f"Could not get coordinates for {waypoint}")
                     weather_data[waypoint] = {"error": "Could not get coordinates"}
                     continue
 
                 # Use the coordinates to get weather data
                 url = f"{self.base_url}?key={self.api_key}&q={coords}&aqi=no"
                 
-                # logger.info(f"Fetching weather for {waypoint} using coordinates: {coords}")
+                logger.info(f"Fetching weather for {waypoint} using coordinates: {coords}")
                 response = await self.http_client.get(url)
                 response.raise_for_status()
                 data = response.json()
 
                 if "error" in data:
-                    # logger.error(f"Weather API error for {waypoint}: {data['error']['message']}")
+                    logger.error(f"Weather API error for {waypoint}: {data['error']['message']}")
                     weather_data[waypoint] = {"error": data["error"]["message"]}
                 else:
                     weather_data[waypoint] = {
@@ -125,8 +125,8 @@ class WeatherAgent:
                             "lng": data["location"]["lon"]
                         }
                     }
-                    # logger.info(f"Successfully fetched weather for {waypoint}: {weather_data[waypoint]['temperature']} and {weather_data[waypoint]['condition']}")
-                    # logger.debug(f"Full weather data for {waypoint}: {weather_data[waypoint]}")
+                    logger.info(f"Successfully fetched weather for {waypoint}: {weather_data[waypoint]['temperature']} and {weather_data[waypoint]['condition']}")
+                    logger.debug(f"Full weather data for {waypoint}: {weather_data[waypoint]}")
             except httpx.RequestError as e:
                 logger.error(f"Error fetching weather data for {waypoint}: {str(e)}")
                 weather_data[waypoint] = {"error": str(e)}
@@ -134,6 +134,6 @@ class WeatherAgent:
                 logger.error(f"Unexpected error fetching weather data for {waypoint}: {str(e)}")
                 weather_data[waypoint] = {"error": str(e)}
 
-        # logger.info(f"Completed weather lookup for {len(weather_data)} locations")
-        # logger.info(f"Locations with weather data: {list(weather_data.keys())}")
+        logger.info(f"Completed weather lookup for {len(weather_data)} locations")
+        logger.info(f"Locations with weather data: {list(weather_data.keys())}")
         return weather_data

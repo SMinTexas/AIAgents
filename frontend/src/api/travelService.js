@@ -17,12 +17,12 @@ export const getRoute = async (origin, destination, waypoints, departureTime, st
             attraction_preferences: attractionPreferences || ["museum", "shopping", "festival"]
         };
         
-        console.log("Sending request to backend:", requestBody);
+        // console.log("Sending request to backend:", requestBody);
         
         const response = await axios.post(`${API_BASE_URL}/plan_trip`, requestBody);
         
-        console.log("Raw response from backend:", response);
-        console.log("Response data:", response.data);
+        // console.log("Raw response from backend:", response);
+        // console.log("Response data:", response.data);
         
         // Ensure the response has the expected structure
         if (!response.data) {
@@ -30,7 +30,7 @@ export const getRoute = async (origin, destination, waypoints, departureTime, st
         }
 
         // Log the route data specifically with detailed inspection
-        console.log("Route data in response:", response.data.route);
+        // console.log("Route data in response:", response.data.route);
         
         // Validate route data
         if (!response.data.route) {
@@ -48,27 +48,27 @@ export const getRoute = async (origin, destination, waypoints, departureTime, st
         const hasCoordinates = Array.isArray(routeInfo.coordinates) && routeInfo.coordinates.length > 0;
         const hasPolyline = typeof routeInfo.polyline === 'string' && routeInfo.polyline.length > 0;
 
-        console.log("Route data validation:", {
-            hasCoordinates,
-            hasPolyline,
-            coordinatesType: typeof routeInfo.coordinates,
-            polylineType: typeof routeInfo.polyline,
-            routeInfoKeys: Object.keys(routeInfo),
-            routeInfoError: routeInfo.error
-        });
+        // console.log("Route data validation:", {
+        //     hasCoordinates,
+        //     hasPolyline,
+        //     coordinatesType: typeof routeInfo.coordinates,
+        //     polylineType: typeof routeInfo.polyline,
+        //     routeInfoKeys: Object.keys(routeInfo),
+        //     routeInfoError: routeInfo.error
+        // });
 
         if (routeInfo.error) {
             throw new Error(`Route error: ${routeInfo.error}`);
         }
 
         if (!hasCoordinates || !hasPolyline) {
-            console.error("Missing required route data:", {
-                hasCoordinates,
-                hasPolyline,
-                coordinatesType: typeof routeInfo.coordinates,
-                polylineType: typeof routeInfo.polyline,
-                routeInfo
-            });
+            // console.error("Missing required route data:", {
+            //     hasCoordinates,
+            //     hasPolyline,
+            //     coordinatesType: typeof routeInfo.coordinates,
+            //     polylineType: typeof routeInfo.polyline,
+            //     routeInfo
+            // });
             throw new Error("Route data is incomplete");
         }
         

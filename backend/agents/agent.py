@@ -96,12 +96,12 @@ class TravelAgent:
                     if 'end_location' in last_leg:
                         destination_coords = [last_leg['end_location']['lat'], last_leg['end_location']['lng']]
 
-                print(f"Route processed successfully:")
-                print(f"- Total distance: {total_distance_miles:.2f} miles")
-                print(f"- Total duration: {total_duration_hours:.2f} hours")
-                print(f"- Number of waypoints: {len(extracted_waypoints)}")
-                print(f"- Has polyline: {bool(polyline_points)}")
-                print(f"- Has destination coords: {bool(destination_coords)}")
+                # print(f"Route processed successfully:")
+                # print(f"- Total distance: {total_distance_miles:.2f} miles")
+                # print(f"- Total duration: {total_duration_hours:.2f} hours")
+                # print(f"- Number of waypoints: {len(extracted_waypoints)}")
+                # print(f"- Has polyline: {bool(polyline_points)}")
+                # print(f"- Has destination coords: {bool(destination_coords)}")
 
                 return {
                     "total_distance_miles": round(total_distance_miles, 2),

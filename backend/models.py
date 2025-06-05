@@ -28,7 +28,7 @@ class RouteRequest(BaseModel):
         default=["museum", "restaurant", "shopping_mall"],
         title="Attraction Preferences",
         description="Types of attractions to include in recommendations",
-        example=["museum", "restaurant", "shopping_mall", "park"]
+        example=["museum", "restaurant", "hotel"]
     )
 
 class DepartureTimeRequest(BaseModel):

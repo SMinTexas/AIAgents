@@ -31,7 +31,7 @@ const TripPlannerForm = ({ onSubmit }) => {
         waypoints: [''],
         departureTime: '',
         stopDurations: [''],
-        attractionPreferences: ['museum', 'restaurant', 'shopping']
+        attractionPreferences: ['museum', 'restaurant', 'hotel']
     });
     const [isLoading, setIsLoading] = useState(false);
 

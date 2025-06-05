@@ -94,30 +94,25 @@ class RecommendationAgent:
         """Get recommendations for each location based on preferences"""
         logger.info(f"Getting recommendations for locations: {locations}")
         logger.info(f"With preferences: {preferences}")
-        logger.info(f"Getting recommendations for locations: {locations}")
-        logger.info(f"With preferences: {preferences}")
         
         recommendations = {}
         
         for location in locations:
             logger.info(f"Processing location: {location}")
-            logger.info(f"Processing location: {location}")
             try:
                 # Get coordinates for the location
                 logger.info(f"Geocoding location: {location}")
-                logger.info(f"Geocoding location: {location}")
                 geocode_result = self.gmaps.geocode(location)
                 if not geocode_result:
-                    logger.warning(f"Could not geocode location: {location}")
-                    logger.warning(f"Could not geocode location: {location}")
+                    # logger.warning(f"Could not geocode location: {location}")
                     continue
                 
                 location_data = geocode_result[0]
                 lat = location_data['geometry']['location']['lat']
                 lng = location_data['geometry']['location']['lng']
                 
-                logger.info(f"Coordinates for {location}: {lat}, {lng}")
-                logger.info(f"Coordinates for {location}: {lat}, {lng}")
+                # logger.info(f"Coordinates for {location}: {lat}, {lng}")
+                # logger.info(f"Coordinates for {location}: {lat}, {lng}")
                 
                 # Initialize recommendations for this location
                 recommendations[location] = {
@@ -128,7 +123,7 @@ class RecommendationAgent:
                 
                 # Always get hotels
                 try:
-                    logger.info(f"Getting hotels for {location} at coordinates ({lat}, {lng})")
+                    # logger.info(f"Getting hotels for {location} at coordinates ({lat}, {lng})")
                     hotels = self.gmaps.places_nearby(
                         location=(lat, lng),
                         type='lodging',
@@ -136,7 +131,7 @@ class RecommendationAgent:
                     )
                     
                     recommendations[location]["hotels"] = self._process_places_results(hotels)
-                    logger.info(f"Found {len(recommendations[location]['hotels'])} hotels")
+                    # logger.info(f"Found {len(recommendations[location]['hotels'])} hotels")
                 except Exception as e:
                     logger.error(f"Error getting hotels for {location}: {str(e)}")
                     logger.error(f"Error type: {type(e)}")
@@ -146,7 +141,7 @@ class RecommendationAgent:
                 
                 # Always get restaurants
                 try:
-                    logger.info(f"Getting restaurants for {location} at coordinates ({lat}, {lng})")
+                    # logger.info(f"Getting restaurants for {location} at coordinates ({lat}, {lng})")
                     restaurants = self.gmaps.places_nearby(
                         location=(lat, lng),
                         type='restaurant',
@@ -154,7 +149,7 @@ class RecommendationAgent:
                     )
                     
                     recommendations[location]["restaurants"] = self._process_places_results(restaurants)
-                    logger.info(f"Found {len(recommendations[location]['restaurants'])} restaurants")
+                    # logger.info(f"Found {len(recommendations[location]['restaurants'])} restaurants")
                 except Exception as e:
                     logger.error(f"Error getting restaurants for {location}: {str(e)}")
                     logger.error(f"Error type: {type(e)}")
@@ -164,12 +159,13 @@ class RecommendationAgent:
                 
                 # Get attractions based on preferences
                 for preference in preferences:
+                    logger.info(f"preference: {preference}")
                     if preference not in VALID_PLACE_TYPES:
-                        logger.warning(f"Invalid place type: {preference}")
+                        # logger.warning(f"Invalid place type: {preference}")
                         continue
                         
                     try:
-                        logger.info(f"Getting {preference} for {location} at coordinates ({lat}, {lng})")
+                        # logger.info(f"Getting {preference} for {location} at coordinates ({lat}, {lng})")
                         places = self.gmaps.places_nearby(
                             location=(lat, lng),
                             type=VALID_PLACE_TYPES[preference],
@@ -178,7 +174,7 @@ class RecommendationAgent:
                         
                         attractions = self._process_places_results(places)
                         recommendations[location]["attractions"].extend(attractions)
-                        logger.info(f"Found {len(attractions)} {preference}")
+                        # logger.info(f"Found {len(attractions)} {preference}")
                     except Exception as e:
                         logger.error(f"Error getting {preference} for {location}: {str(e)}")
                         logger.error(f"Error type: {type(e)}")
@@ -194,8 +190,7 @@ class RecommendationAgent:
                     logger.error(f"Response body: {e.response.text}")
                 continue
         
-        logger.info(f"Final recommendations structure: {recommendations}")
-        logger.info(f"Final recommendations structure: {recommendations}")
+        # logger.info(f"Final recommendations structure: {recommendations}")
         return recommendations
 
     async def _get_lat_lng(self, address):
@@ -244,7 +239,7 @@ class RecommendationAgent:
             cache_key = f"details_{place_id}"
             cached_details = cache_manager.get_cached('details', cache_key)
             if cached_details:
-                logger.debug(f"Cache HIT: Place details for {place_id}")
+                # logger.debug(f"Cache HIT: Place details for {place_id}")
                 return cached_details
 
             logger.debug(f"Cache MISS: Place details for {place_id}")
@@ -269,7 +264,7 @@ class RecommendationAgent:
                 }
                 # Cache the place details
                 cache_manager.set_cached('details', cache_key, place_details)
-                logger.debug(f"Cached place details for {place_details['name']}")
+                # logger.debug(f"Cached place details for {place_details['name']}")
                 return place_details
         except Exception as e:
             logger.error(f"Error getting place details for place_id {place_id}: {str(e)}")
@@ -340,7 +335,7 @@ class RecommendationAgent:
         
         # If no matches were found, return the top 5 raw results
         if not ranked_places:
-            logger.warning(f"No matches found via AI for {category}. Using top 5 raw results.")
+            # logger.warning(f"No matches found via AI for {category}. Using top 5 raw results.")
             return places[:5]
         
         return ranked_places
@@ -353,11 +348,11 @@ class RecommendationAgent:
         :param max_distance: Maximum distance in meters from route to search for attractions
         :return: Dictionary of attractions found along the route
         """
-        logger.info(f"Searching for attractions along route with {len(route_coordinates)} points")
+        # logger.info(f"Searching for attractions along route with {len(route_coordinates)} points")
         
         # Sample points along the route (every 10th point to avoid too many API calls)
         sampled_points = route_coordinates[::10]
-        logger.info(f"Sampling {len(sampled_points)} points along route")
+        # logger.info(f"Sampling {len(sampled_points)} points along route")
         
         route_attractions = []
         
@@ -367,11 +362,11 @@ class RecommendationAgent:
             # Search for each preferred attraction type
             for preference in preferences:
                 if preference not in VALID_PLACE_TYPES:
-                    logger.warning(f"Invalid place type: {preference}")
+                    # logger.warning(f"Invalid place type: {preference}")
                     continue
                     
                 try:
-                    logger.info(f"Searching for {preference} near coordinates ({lat}, {lng})")
+                    # logger.info(f"Searching for {preference} near coordinates ({lat}, {lng})")
                     places = self.gmaps.places_nearby(
                         location=(lat, lng),
                         type=VALID_PLACE_TYPES[preference],
@@ -414,7 +409,7 @@ class RecommendationAgent:
                 seen_place_ids.add(attraction['place_id'])
                 unique_attractions.append(attraction)
         
-        logger.info(f"Found {len(unique_attractions)} unique attractions along route")
+        # logger.info(f"Found {len(unique_attractions)} unique attractions along route")
         return unique_attractions
 
     def _calculate_distance(self, point1, point2):

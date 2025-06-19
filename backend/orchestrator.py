@@ -86,7 +86,7 @@ async def plan_trip(request: RouteRequest):
         
         # Get recommendations for waypoints with timeout
         try:
-            recommendations = await asynchio.wait_for(
+            recommendations = await asyncio.wait_for(
                 recommendation_agent.get_recommendations(
                     request.waypoints + [request.destination], # Exclude origin
                     request.attraction_preferences

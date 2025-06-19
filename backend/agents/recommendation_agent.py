@@ -40,25 +40,9 @@ VALID_PLACE_TYPES = {
     'night_club': 'night_club',
     'park': 'park',
     'stadium': 'stadium',
-    'tourist_attraction': 'tourist_attraction'
-}
-
-# Valid Google Places API types
-VALID_PLACE_TYPES = {
-    'museum': 'museum',
-    'restaurant': 'restaurant',
-    'shopping_mall': 'shopping_mall',
-    'zoo': 'zoo',
-    'casino': 'casino',
-    'aquarium': 'aquarium',
-    'amusement_park': 'amusement_park',
-    'art_gallery': 'art_gallery',
-    'bowling_alley': 'bowling_alley',
-    'movie_theater': 'movie_theater',
-    'night_club': 'night_club',
-    'park': 'park',
-    'stadium': 'stadium',
-    'tourist_attraction': 'tourist_attraction'
+    'tourist_attraction': 'tourist_attraction',
+    'hotels': 'lodging',
+    'logding': 'lodging'
 }
 
 def is_similar(a, b, threshold=0.8):

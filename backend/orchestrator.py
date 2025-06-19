@@ -16,6 +16,15 @@ weather_agent = WeatherAgent()
 recommendation_agent = RecommendationAgent()
 logger = logging.getLogger(__name__)
 
+@router.get("/api/test", response_model=dict)
+async def test_endpoint():
+    """ Simple test endpoint to verify API is working """
+    return {
+        "status": "success",
+        "message": "API is working correctly",
+        "timestamp": time.time()
+    }
+
 @router.post("/api/plan_trip", response_model=dict)
 async def plan_trip(request: RouteRequest):
     """ AI-powered trip planner that integrates route, weather, and recommendations """
@@ -120,6 +129,23 @@ async def plan_trip(request: RouteRequest):
             "weather": weather_data,
             "recommendations": recommendations
         }
+
+        # Log response structure for debugging
+        logger.info(f"Response structure:")
+        logger.info(f"- Route keys: {list(route_info[0].keys()) if route_info and isinstance(route_info, list) else 'No route'}")
+        logger.info(f"- Weather keys: {list(weather_data.keys()) if isinstance(weather_data, dict) else 'No weather'}")
+        logger.info(f"- Recommendations keys: {list(recommendations.keys()) if isinstance(recommendations, dict) else 'No recommendations'}")
+
+        # Check for large data that might cause Swagger issues
+        if route_info and isinstance(route_info, list) and len(route_info) > 0:
+            route_item = route_info[0]
+            if 'coordinates' in route_item:
+                logger.info(f"- Route coordinates count: {len(route_item['coordinates'])}")
+            if 'route_attractions' in route_item:
+                logger.info(f"- Route attractions count: {len(route_item['route_attractions'])}")
+        # Log total response time
+        response_str = json.dumps(response_data, default=str)
+        logger.info(f"Response size: {len(response_str)} characters")
 
         logger.info(f"Trip planning completed in {time.time() - start_time:.2f} seconds")
         return response_data

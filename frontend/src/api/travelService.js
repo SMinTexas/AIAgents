@@ -66,19 +66,19 @@ export const getRoute = async (origin, destination, waypoints, departureTime, st
     }
 };
 
-export const getRecommendations = async (locations, preferences) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}/recommendations/`, {
-            locations,
-            preferences,
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching recommendations:", error);
-        if (error.response) {
-            console.error("Error response data:", error.response.data);
-            console.error("Error response status:", error.response.status);
-        }
-        return null;
-    }
-};
+// export const getRecommendations = async (locations, preferences) => {
+//     try {
+//         const response = await axios.post(`${API_BASE_URL}/recommendations/`, {
+//             locations,
+//             preferences,
+//         });
+//         return response.data;
+//     } catch (error) {
+//         console.error("Error fetching recommendations:", error);
+//         if (error.response) {
+//             console.error("Error response data:", error.response.data);
+//             console.error("Error response status:", error.response.status);
+//         }
+//         return null;
+//     }
+// };

@@ -27,15 +27,33 @@ async def plan_trip(request: RouteRequest):
         departure_time = request.departure_time
         stop_durations = [d for d in request.stop_durations] if request.stop_durations else []
 
-        # Fetch optimized route
+        # Fetch optimized route with timeout
         logger.info(f"Fetching route from {request.origin} to {request.destination}")
-        route_info = travel_agent.get_route(request.origin, request.destination, request.waypoints)
+        try:
+            route_info = await asyncio.wait_for(
+                asyncio.to_thread(travel_agent.get_route, request.origin, request.destination, request.waypoints),
+                timeout=30.0 # 30 second timeout for route
+            )
+        except asyncio.TimeoutError:
+            logger.error("Route request timed out after 30 seconds")
+            return {"error": "Route request timed out. Please try again."}
+        
         logger.info(f"Route info received: {route_info}")
 
+        # Check if route request failed
+        if "error" in route_info:
+            logger.error(f"Route request failed: {route_info["error"]}")
+            return {"error": f"Failed to get route: {route_info["error"]}"}
+        
         if "polyline" in route_info:
-            decoded_coordinates = polyline.decode(route_info["polyline"])
-            decoded_coordinates = [list(coord) for coord in decoded_coordinates]
-            logger.info(f"Decoded {len(decoded_coordinates)} coordinates from polyline")
+            # Use detailed coordinates if available, otherwise decode the polyline
+            if "detailed_coordinates" in route_info:
+                decoded_coordinates = route_info["detailed_coordinates"]
+                logger.info(f"Using {len(decoded_coordinates)} detailed coordinates from route")
+            else:
+                decoded_coordinates = polyline.decode(route_info["polyline"])
+                decoded_coordinates = [list(coord) for coord in decoded_coordinates]
+                logger.info(f"Decoded {len(decoded_coordinates)} coordinates from polyline")
         else:
             decoded_coordinates = []
             logger.warning("No polyline found in route response")
@@ -45,7 +63,7 @@ async def plan_trip(request: RouteRequest):
         if not isinstance(route_info, list):
             route_info = [route_info] if route_info else []
 
-        # Fetch weather alerts
+        # Fetch weather alerts with timeout
         weather_stops = [request.origin]
         if request.waypoints:
             weather_stops.extend(request.waypoints)
@@ -56,19 +74,41 @@ async def plan_trip(request: RouteRequest):
             "waypoints": weather_stops,
             "legs": route_info[0] if isinstance(route_info, list) else route_info
         }
-        weather_data = await weather_agent.get_weather(weather_request)
+
+        try:
+            weather_data = await asyncio.wait_for(
+                weather_agent.get_weather(weather_request),
+                timeout=60.0 # 60 second timeout for weather
+            )
+        except asyncio.TimeoutError:
+            logger.error("Weather request timed out after 60 seconds")
+            weather_data = {"error": "Weather request timed out"}
         
-        # Get recommendations for waypoints
-        recommendations = await recommendation_agent.get_recommendations(
-            request.waypoints + [request.destination],
-            request.attraction_preferences
-        )
+        # Get recommendations for waypoints with timeout
+        try:
+            recommendations = await asynchio.wait_for(
+                recommendation_agent.get_recommendations(
+                    request.waypoints + [request.destination], # Exclude origin
+                    request.attraction_preferences
+                ),
+                timeout=90.0 # 90 second timeout for recommendations
+            )
+        except asyncio.TimeoutError:
+            logger.error("Recommendations request timed out after 90 seconds")
+            recommendations = {"error": "Recommendations request timed out"}
         
-        # Get attractions along the route
-        route_attractions = await recommendation_agent.get_route_attractions(
-            decoded_coordinates,
-            request.attraction_preferences
-        )
+        # Get attractions along the route with timeout
+        try:
+            route_attractions = await asyncio.wait_for(
+                recommendation_agent.get_route_attractions(
+                    decoded_coordinates,
+                    request.attraction_preferences
+                ),
+                timeout=60.0 # 60 second timeout for route attractions
+            )
+        except asyncio.TimeoutError:
+            logger.error("Route attractions request timed out after 60 seconds")
+            route_attractions = []
         
         # Add route attractions to the response
         for route_info_item in route_info:

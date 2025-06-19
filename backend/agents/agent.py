@@ -92,6 +92,20 @@ class TravelAgent:
                 # Get the polyline for the route
                 polyline_points = route_result[0]['overview_polyline']['points']
                 
+                # Get detailed polyline coordinates that follow roads accurately
+                detailed_coordinates = []
+                for leg in route_result[0]['legs']:
+                    if 'steps' in leg:
+                        for step in leg['steps']:
+                            if 'polyline' in step and 'points' in step['polyline']:
+                                # Decode the polyline for this step
+                                step_coords = polyline.decode(step['polyline']['points'])
+                                detailed_coordinates.extend(step_coords)
+
+                # If we couldn't get detailed coordinates, fall back to overview polyline
+                if not detailed_coordinates:
+                    detailed_coordinates = polyline.decode(polyline_points)
+
                 # Get the destination coordinates
                 destination_coords = None
                 if route_result[0]['legs'] and len(route_result[0]['legs']) > 0:
@@ -105,6 +119,7 @@ class TravelAgent:
                 logger.info(f"- Number of waypoints: {len(extracted_waypoints)}")
                 logger.info(f"- Has polyline: {bool(polyline_points)}")
                 logger.info(f"- Has destination coords: {bool(destination_coords)}")
+                logger.info(f"- Detailed coordinates: {len(detailed_coordinates)} points")
 
                 return {
                     "total_distance_miles": round(total_distance_miles, 2),
@@ -112,6 +127,7 @@ class TravelAgent:
                     "estimated_time_hours": round(total_duration_hours, 2),
                     "estimated_time_text": total_duration_text,
                     "polyline": polyline_points,
+                    "detailed_coordinates": detailed_coordinates,
                     "legs": all_legs,
                     "waypoints": extracted_waypoints,
                     "destination_coords": destination_coords

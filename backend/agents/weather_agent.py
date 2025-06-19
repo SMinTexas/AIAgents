@@ -3,6 +3,7 @@ import os
 from urllib.parse import quote
 import logging
 import googlemaps
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class WeatherAgent:
                 address = f"{address}, Texas, USA"
 
             logger(f"Geocoding address: {address}")
-            geocode_result = self.gmaps.geocode(address)
+            geocode_result = await asyncio.to_thread(self.gmaps.geocode, address)
             
             if geocode_result:
                 location = geocode_result[0]['geometry']['location']

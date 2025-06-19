@@ -15,7 +15,6 @@ backend_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(backend_dir))
 
 from utils import cache_manager
-from utils import cache_manager
 import logging
 
 # Set up logging with a more concise format
@@ -98,12 +97,12 @@ class RecommendationAgent:
         recommendations = {}
         
         # Skip the first location (origin) and process the rest
-        for location in locations[1:]:
+        for location in locations[1:]: # Start from index 1 to skip origin
             logger.info(f"Processing location: {location}")
             try:
                 # Get coordinates for the location
                 logger.info(f"Geocoding location: {location}")
-                geocode_result = self.gmaps.geocode(location)
+                geocode_result = await asyncio.to_thread(self.gmaps.geocode, location)
                 if not geocode_result:
                     logger.warning(f"Could not geocode location: {location}")
                     continue
@@ -124,12 +123,13 @@ class RecommendationAgent:
                 # Always get hotels
                 try:
                     logger.info(f"Getting hotels for {location} at coordinates ({lat}, {lng})")
-                    hotels = self.gmaps.places_nearby(
+                    hotels = await asyncio.to_thread(
+                        self.gmaps.places_nearby,
                         location=(lat, lng),
                         type='lodging',
-                        radius=5000  # 5km radius
+                        radius=5000
                     )
-                    
+
                     recommendations[location]["hotels"] = self._process_places_results(hotels)
                     logger.info(f"Found {len(recommendations[location]['hotels'])} hotels")
                 except Exception as e:
@@ -142,7 +142,8 @@ class RecommendationAgent:
                 # Always get restaurants
                 try:
                     logger.info(f"Getting restaurants for {location} at coordinates ({lat}, {lng})")
-                    restaurants = self.gmaps.places_nearby(
+                    restaurants = await asyncio.to_thread(
+                        self.gmaps.places_nearby,
                         location=(lat, lng),
                         type='restaurant',
                         radius=5000  # 5km radius
@@ -166,13 +167,14 @@ class RecommendationAgent:
                         
                     try:
                         logger.info(f"Getting {preference} for {location} at coordinates ({lat}, {lng})")
-                        places = self.gmaps.places_nearby(
+                        places = await asyncio.to_thread(
+                            self.gmaps.places_nearby,
                             location=(lat, lng),
                             type=VALID_PLACE_TYPES[preference],
                             radius=5000  # 5km radius
                         )
                         
-                        attractions = self._process_places_results(places)
+                        attractions = self._process_places_results(places, max_results=3) # Limit to 3 per type
                         recommendations[location]["attractions"].extend(attractions)
                         logger.info(f"Found {len(attractions)} {preference}")
                     except Exception as e:
@@ -182,6 +184,13 @@ class RecommendationAgent:
                             logger.error(f"Response status: {e.response.status_code}")
                             logger.error(f"Response body: {e.response.text}")
                 
+                # Limit total attractions per location to prevent too many markers
+                            if len(recommendations[location]["attractions"]) > 9:
+                                # Sort by rating and take the top 9
+                                recommendations[location]["attractions"].sort(key=lambda x: x.get('rating', 0), reverse=True)
+                                recommendations[location]["attractions"] = recommendations[location]["attractions"][:9]
+                                logger.info(f"Limited attractions for {location} to top 9 by rating")
+
             except Exception as e:
                 logger.error(f"Error processing location {location}: {str(e)}")
                 logger.error(f"Error type: {type(e)}")
@@ -341,12 +350,14 @@ class RecommendationAgent:
         
         return ranked_places
 
-    async def get_route_attractions(self, route_coordinates, preferences, max_distance=5000):
+    async def get_route_attractions(self, route_coordinates, preferences, max_distance=5000, max_attractions_per_type=3, max_total_attractions=15):
         """
         Find attractions along the route, not just at waypoints
         :param route_coordinates: List of [lat, lng] coordinates along the route
         :param preferences: List of place types to search for
         :param max_distance: Maximum distance in meters from route to search for attractions
+        :param max_attractions_per_type: Maximum number of attractions per type to return
+        :param max_total_attractions: Maximum total number of attractions to return
         :return: Dictionary of attractions found along the route
         """
         logger.info(f"Searching for attractions along route with {len(route_coordinates)} points")
@@ -359,7 +370,9 @@ class RecommendationAgent:
         sampled_points = route_coordinates[::10]
         logger.info(f"Sampling {len(sampled_points)} points along route")
         
-        route_attractions = []
+        # route_attractions = []
+        # Track attractions by type of limit per type
+        attractions_by_type = {}
         
         for point in sampled_points:
             lat, lng = point
@@ -370,6 +383,10 @@ class RecommendationAgent:
                     logger.warning(f"Invalid place type: {preference}")
                     continue
                     
+                # Skip if we already have enough of this type
+                if preference in attractions_by_type and len(attractions_by_type[preference]) >= max_attractions_per_type:
+                    continue
+
                 try:
                     logger.info(f"Searching for {preference} near coordinates ({lat}, {lng})")
                     places = self.gmaps.places_nearby(
@@ -379,7 +396,15 @@ class RecommendationAgent:
                     )
                     
                     if places and 'results' in places:
+                        # Initialize list for this type if not exists
+                        if preference not in attractions_by_type:
+                            attractions_by_type[preference] = []
+
                         for place in places['results']:
+                            # Stop if we have enough of this type
+                            if len(attractions_by_type[preference]) >= max_attractions_per_type:
+                                   break
+
                             # Calculate distance from route point
                             place_location = place['geometry']['location']
                             distance = self._calculate_distance(
@@ -397,15 +422,23 @@ class RecommendationAgent:
                                     'distance_from_route': distance,
                                     'place_id': place.get('place_id')
                                 }
-                                route_attractions.append(attraction)
+                                # route_attractions.append(attraction)
+                                attractions_by_type[preference].append(attraction)
                                 
                 except Exception as e:
                     logger.error(f"Error searching for {preference} near ({lat}, {lng}): {str(e)}")
                     continue
         
+        # Combine all attractions and sort by rating and distance
+        route_attractions = []
+        for preference, attractions in attractions_by_type.items():
+            # Sort attractions for this type by rating and distance
+            attractions.sort(key=lambda x: (x['rating'], -x['distance_from_route']), reverse=True)
+            route_attractions.extend(attractions)
+        
         # Sort attractions by rating and distance
         route_attractions.sort(key=lambda x: (x['rating'], -x['distance_from_route']), reverse=True)
-        
+
         # Remove duplicates (same place_id)
         seen_place_ids = set()
         unique_attractions = []
@@ -413,6 +446,10 @@ class RecommendationAgent:
             if attraction['place_id'] not in seen_place_ids:
                 seen_place_ids.add(attraction['place_id'])
                 unique_attractions.append(attraction)
+        
+                # Stop if we have reached the total limit
+                if len(unique_attractions) >= max_total_attractions:
+                    break;
         
         logger.info(f"Found {len(unique_attractions)} unique attractions along route")
         return unique_attractions

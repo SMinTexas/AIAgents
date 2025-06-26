@@ -354,7 +354,6 @@ class RecommendationAgent:
         sampled_points = route_coordinates[::10]
         logger.info(f"Sampling {len(sampled_points)} points along route")
         
-        # route_attractions = []
         # Track attractions by type of limit per type
         attractions_by_type = {}
         

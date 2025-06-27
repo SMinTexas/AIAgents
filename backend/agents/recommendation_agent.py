@@ -80,8 +80,8 @@ class RecommendationAgent:
         
         recommendations = {}
         
-        # Skip the first location (origin) and process the rest
-        for location in locations[1:]: # Start from index 1 to skip origin
+        # Process all locations (orchestrator already excludes origin)
+        for location in locations: # Process all locations, don't skip first
             logger.info(f"Processing location: {location}")
             try:
                 # Get coordinates for the location
@@ -148,6 +148,16 @@ class RecommendationAgent:
                     if preference not in VALID_PLACE_TYPES:
                         logger.warning(f"Invalid place type: {preference}")
                         continue
+                    
+                    # Skip restaurant since it's already handled separately
+                    if preference == 'restaurant':
+                        logger.info(f"Skipping restaurant preference since restaurants are handled separately")
+                        continue
+                    
+                    # Skip hotels since they're already handled separately
+                    if preference == 'hotels':
+                        logger.info(f"Skipping hotels preference since hotels are handled separately")
+                        continue
                         
                     try:
                         logger.info(f"Getting {preference} for {location} at coordinates ({lat}, {lng})")
@@ -169,11 +179,11 @@ class RecommendationAgent:
                             logger.error(f"Response body: {e.response.text}")
                 
                 # Limit total attractions per location to prevent too many markers
-                            if len(recommendations[location]["attractions"]) > 9:
-                                # Sort by rating and take the top 9
-                                recommendations[location]["attractions"].sort(key=lambda x: x.get('rating', 0), reverse=True)
-                                recommendations[location]["attractions"] = recommendations[location]["attractions"][:9]
-                                logger.info(f"Limited attractions for {location} to top 9 by rating")
+                if len(recommendations[location]["attractions"]) > 9:
+                    # Sort by rating and take the top 9
+                    recommendations[location]["attractions"].sort(key=lambda x: x.get('rating', 0), reverse=True)
+                    recommendations[location]["attractions"] = recommendations[location]["attractions"][:9]
+                    logger.info(f"Limited attractions for {location} to top 9 by rating")
 
             except Exception as e:
                 logger.error(f"Error processing location {location}: {str(e)}")
@@ -364,6 +374,16 @@ class RecommendationAgent:
             for preference in preferences:
                 if preference not in VALID_PLACE_TYPES:
                     logger.warning(f"Invalid place type: {preference}")
+                    continue
+                
+                # Skip restaurant since it's already handled separately
+                if preference == 'restaurant':
+                    logger.info(f"Skipping restaurant preference since restaurants are handled separately")
+                    continue
+                
+                # Skip hotels since they're already handled separately
+                if preference == 'hotels':
+                    logger.info(f"Skipping hotels preference since hotels are handled separately")
                     continue
                     
                 # Skip if we already have enough of this type

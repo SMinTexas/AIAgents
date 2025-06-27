@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class WeatherAgent:
     def __init__(self):
         """ Initialize WeatherAPI """
-        """ Initialize WeatherAPI """
+
         self.api_key = os.getenv("WEATHER_API_KEY")
         self.google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
         if not self.api_key or not self.google_api_key:
@@ -36,7 +36,7 @@ class WeatherAgent:
             if "katy" in address.lower() and "texas" not in address.lower():
                 address = f"{address}, Texas, USA"
 
-            logger(f"Geocoding address: {address}")
+            logger.info(f"Geocoding address: {address}")
             geocode_result = await asyncio.to_thread(self.gmaps.geocode, address)
             
             if geocode_result:

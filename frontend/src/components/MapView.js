@@ -315,11 +315,15 @@ const MapView = ({ tripData }) => {
             // Add weather markers if available
             if (tripData.weather && typeof tripData.weather === 'object') 
             {
+                console.log("Weather data found:", tripData.weather);
                 // Convert weather object to array of entries
                 const weatherEntries = Object.entries(tripData.weather);
+                console.log("Weather entries:", weatherEntries);
                 
                 weatherEntries.forEach(([location, weather]) => {
+                    console.log(`Processing weather for ${location}:`, weather);
                     if (weather && weather.coords) {
+                        console.log(`Adding weather marker for ${location} at coords:`, weather.coords);
                         newMarkers.push({
                             position: weather.coords,
                             type: "weather",
@@ -329,8 +333,12 @@ const MapView = ({ tripData }) => {
                                 Condition: ${weather.condition}
                             `
                         });
+                    } else {
+                        console.warn(`No coords found for weather data in ${location}:`, weather);
                     }
                 });
+            } else {
+                console.warn("No weather data available:", tripData.weather);
             }
 
             // Add traffic markers if available

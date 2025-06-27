@@ -12,9 +12,31 @@ import logging
 
 router = APIRouter()
 travel_agent = TravelAgent()
-weather_agent = WeatherAgent()
-recommendation_agent = RecommendationAgent()
+weather_agent = None  # Initialize lazily
+recommendation_agent = None  # Initialize lazily
 logger = logging.getLogger(__name__)
+
+def get_weather_agent():
+    """Get weather agent instance, initializing it if needed"""
+    global weather_agent
+    if weather_agent is None:
+        try:
+            weather_agent = WeatherAgent()
+        except ValueError as e:
+            logger.warning(f"Weather agent initialization failed: {e}")
+            return None
+    return weather_agent
+
+def get_recommendation_agent():
+    """Get recommendation agent instance, initializing it if needed"""
+    global recommendation_agent
+    if recommendation_agent is None:
+        try:
+            recommendation_agent = RecommendationAgent()
+        except ValueError as e:
+            logger.warning(f"Recommendation agent initialization failed: {e}")
+            return None
+    return recommendation_agent
 
 @router.get("/api/test", response_model=dict)
 async def test_endpoint():
@@ -85,36 +107,51 @@ async def plan_trip(request: RouteRequest):
         }
 
         try:
-            weather_data = await asyncio.wait_for(
-                weather_agent.get_weather(weather_request),
-                timeout=60.0 # 60 second timeout for weather
-            )
+            weather_agent_instance = get_weather_agent()
+            if weather_agent_instance:
+                weather_data = await asyncio.wait_for(
+                    weather_agent_instance.get_weather(weather_request),
+                    timeout=60.0 # 60 second timeout for weather
+                )
+            else:
+                logger.warning("Weather agent not available - skipping weather data")
+                weather_data = {"error": "Weather API key not configured"}
         except asyncio.TimeoutError:
             logger.error("Weather request timed out after 60 seconds")
             weather_data = {"error": "Weather request timed out"}
         
         # Get recommendations for waypoints with timeout
         try:
-            recommendations = await asyncio.wait_for(
-                recommendation_agent.get_recommendations(
-                    request.waypoints + [request.destination], # Exclude origin
-                    request.attraction_preferences
-                ),
-                timeout=90.0 # 90 second timeout for recommendations
-            )
+            recommendation_agent_instance = get_recommendation_agent()
+            if recommendation_agent_instance:
+                recommendations = await asyncio.wait_for(
+                    recommendation_agent_instance.get_recommendations(
+                        (request.waypoints or []) + [request.destination], # Exclude origin
+                        request.attraction_preferences
+                    ),
+                    timeout=90.0 # 90 second timeout for recommendations
+                )
+            else:
+                logger.warning("Recommendation agent not available - skipping recommendations")
+                recommendations = {"error": "Google Maps API key not configured"}
         except asyncio.TimeoutError:
             logger.error("Recommendations request timed out after 90 seconds")
             recommendations = {"error": "Recommendations request timed out"}
         
         # Get attractions along the route with timeout
         try:
-            route_attractions = await asyncio.wait_for(
-                recommendation_agent.get_route_attractions(
-                    decoded_coordinates,
-                    request.attraction_preferences
-                ),
-                timeout=60.0 # 60 second timeout for route attractions
-            )
+            recommendation_agent_instance = get_recommendation_agent()
+            if recommendation_agent_instance:
+                route_attractions = await asyncio.wait_for(
+                    recommendation_agent_instance.get_route_attractions(
+                        decoded_coordinates,
+                        request.attraction_preferences
+                    ),
+                    timeout=60.0 # 60 second timeout for route attractions
+                )
+            else:
+                logger.warning("Recommendation agent not available - skipping route attractions")
+                route_attractions = []
         except asyncio.TimeoutError:
             logger.error("Route attractions request timed out after 60 seconds")
             route_attractions = []

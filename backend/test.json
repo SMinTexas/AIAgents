@@ -4,5 +4,5 @@
     "waypoints": ["New Orleans, LA", "Pensacola, FL"],
     "departure_time": "2025-07-01 05:00",
     "stop_durations": [12, 12],
-    "attraction_preferences": ["museum", "restaurant", "hotels"]
+    "attraction_preferences": ["museum", "tourist_attraction", "park"]
 }

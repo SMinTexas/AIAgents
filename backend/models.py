@@ -25,10 +25,10 @@ class RouteRequest(BaseModel):
         example=[4, 12]
     )
     attraction_preferences: Optional[List[str]] = Field(
-        default=["museum", "restaurant", "shopping_mall"],
+        default=["museum", "tourist_attraction", "park"],
         title="Attraction Preferences",
         description="Types of attractions to include in recommendations",
-        example=["museum", "restaurant", "hotel"]
+        example=["museum", "tourist_attraction", "park"]
     )
 
 class DepartureTimeRequest(BaseModel):
